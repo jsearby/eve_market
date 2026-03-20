@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+
+# EVE data caches
+cache/*
+!cache/CACHE.md
+*.json
+!requirements.txt
+
+# Credentials
+cred.ps1
+esi_tokens.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

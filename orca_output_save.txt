@@ -1,0 +1,826 @@
+
+================================================================================
+EVE ONLINE MANUFACTURING OPTIMIZER
+================================================================================
+
+✓ Loaded profile: nightsea1
+✓ Capital: 178.49M ISK
+📚 Loading EVE SDE data...
+   Searching for blueprints.yaml...
+   Found: sde_data\fsd\blueprints.yaml
+   Loading cached blueprints.yaml (~1-3 seconds)...
+   ✓ Loaded 5,031 blueprint types
+   Searching for types.yaml...
+   Found: sde_data\fsd\types.yaml
+   Loading cached types.yaml (~1-3 seconds)...
+   ✓ Loaded 50,235 item types
+   Searching for groups.yaml...
+   Found: sde_data\fsd\groups.yaml
+   Loading cached groups.yaml (~1-3 seconds)...
+   ✓ Loaded 1,556 item groups
+   Searching for planetSchematics.yaml...
+   Found: sde_data\fsd\planetSchematics.yaml
+   Loading cached planetSchematics.yaml (~1-3 seconds)...
+   ✓ Loaded 68 PI schematics
+✓ SDE data loaded
+
+================================================================================
+🏗️  MANUFACTURING ANALYSIS: Orca
+================================================================================
+
+🔍 Searching for item...
+✓ Found: Orca (ID: 28606)
+
+📋 Looking for blueprint...
+✓ Blueprint: Orca Blueprint
+
+📘 BLUEPRINT REQUIREMENTS
+================================================================================
+Analyzing blueprint requirements (including all components)...
+
+✓ Total blueprints needed: 22
+   • Manufacturing blueprints: 15
+   • Reaction blueprints: 7
+
+💡 How to check your blueprints in-game:
+   1. Open Personal Assets (Alt+T)
+   2. Search for 'Blueprint' in the search bar
+   3. Filter by name to find specific blueprints
+   4. Check if they are BPO (Blueprint Original) or BPC (Blueprint Copy)
+
+📋 Blueprint List:
+   • Auto-Integrity Preservation Seal (Manufacturing)
+     └─ Status: ⚠️  Check assets manually (ESI integration coming soon)
+   • Capital Capacitor Battery (Manufacturing)
+     └─ Status: ⚠️  Check assets manually (ESI integration coming soon)
+   • Capital Cargo Bay (Manufacturing)
+     └─ Status: ⚠️  Check assets manually (ESI integration coming soon)
+   • Capital Computer System (Manufacturing)
+     └─ Status: ⚠️  Check assets manually (ESI integration coming soon)
+   • Capital Construction Parts (Manufacturing)
+     └─ Status: ⚠️  Check assets manually (ESI integration coming soon)
+   • Capital Corporate Hangar Bay (Manufacturing)
+     └─ Status: ⚠️  Check assets manually (ESI integration coming soon)
+   • Capital Sensor Cluster (Manufacturing)
+     └─ Status: ⚠️  Check assets manually (ESI integration coming soon)
+   • Capital Ship Maintenance Bay (Manufacturing)
+     └─ Status: ⚠️  Check assets manually (ESI integration coming soon)
+   • Carbon Fiber (Reaction)
+     └─ Status: ⚠️  Check assets manually (ESI integration coming soon)
+   • Carbon Polymers (Reaction)
+     └─ Status: ⚠️  Check assets manually (ESI integration coming soon)
+   • Core Temperature Regulator (Manufacturing)
+     └─ Status: ⚠️  Check assets manually (ESI integration coming soon)
+   • Helium Fuel Block (Manufacturing)
+     └─ Status: ⚠️  Check assets manually (ESI integration coming soon)
+   • Hydrogen Fuel Block (Manufacturing)
+     └─ Status: ⚠️  Check assets manually (ESI integration coming soon)
+   • Life Support Backup Unit (Manufacturing)
+     └─ Status: ⚠️  Check assets manually (ESI integration coming soon)
+   • Nitrogen Fuel Block (Manufacturing)
+     └─ Status: ⚠️  Check assets manually (ESI integration coming soon)
+   • Orca (Manufacturing)
+     └─ Status: ⚠️  Check assets manually (ESI integration coming soon)
+   • Oxy-Organic Solvents (Reaction)
+     └─ Status: ⚠️  Check assets manually (ESI integration coming soon)
+   • Oxygen Fuel Block (Manufacturing)
+     └─ Status: ⚠️  Check assets manually (ESI integration coming soon)
+   • Pressurized Oxidizers (Reaction)
+     └─ Status: ⚠️  Check assets manually (ESI integration coming soon)
+   • Reinforced Carbon Fiber (Reaction)
+     └─ Status: ⚠️  Check assets manually (ESI integration coming soon)
+   • Sulfuric Acid (Reaction)
+     └─ Status: ⚠️  Check assets manually (ESI integration coming soon)
+   • Thermosetting Polymer (Reaction)
+     └─ Status: ⚠️  Check assets manually (ESI integration coming soon)
+
+================================================================================
+
+📦 Material Requirements:
+   Required materials: 10 types
+   🏭 Capital Sensor Cluster: 4 units (manufactured)
+   🏭 Capital Capacitor Battery: 9 units (manufactured)
+   🏭 Capital Cargo Bay: 38 units (manufactured)
+   🏭 Capital Computer System: 7 units (manufactured)
+   🏭 Capital Construction Parts: 16 units (manufactured)
+   🏭 Capital Ship Maintenance Bay: 7 units (manufactured)
+   🏭 Capital Corporate Hangar Bay: 4 units (manufactured)
+   🏭 Auto-Integrity Preservation Seal: 200 units (manufactured)
+   🏭 Core Temperature Regulator: 25 units (manufactured)
+   🏭 Life Support Backup Unit: 100 units (manufactured)
+
+================================================================================
+📊 COMPONENT BREAKDOWN (Recursive)
+================================================================================
+
+🔧 Capital Sensor Cluster (need 4 units):
+   Manufacturing: 4 run(s) × 1 per run = 4 units
+   Direct materials per run:
+      ⛏️ Broadcast Node: 1 × 4 = 4 units
+      🌍 PI Material - made from:
+         🔧 Neocoms: 6 × 4 = 24 units
+            🌍 PI Material - made from:
+               🔧 Biocells: 10 × 24 = 240 units
+                  🌍 PI Material - made from:
+                     🔧 Biofuels: 40 × 240 = 9,600 units
+                        🌍 PI Material - made from:
+                           ⛏️  Carbon Compounds (P0): 3000 × 9,600 = 28,800,000 units
+                     🔧 Precious Metals: 40 × 240 = 9,600 units
+                        🌍 PI Material - made from:
+                           ⛏️  Noble Metals (P0): 3000 × 9,600 = 28,800,000 units
+               🔧 Silicate Glass: 10 × 24 = 240 units
+                  🌍 PI Material - made from:
+                     🔧 Oxidizing Compound: 40 × 240 = 9,600 units
+                        🌍 PI Material - made from:
+                           ⛏️  Reactive Gas (P0): 3000 × 9,600 = 28,800,000 units
+                     🔧 Silicon: 40 × 240 = 9,600 units
+                        🌍 PI Material - made from:
+                           ⛏️  Felsic Magma (P0): 3000 × 9,600 = 28,800,000 units
+         🔧 Data Chips: 6 × 4 = 24 units
+            🌍 PI Material - made from:
+               🔧 Supertensile Plastics: 10 × 24 = 240 units
+                  🌍 PI Material - made from:
+                     🔧 Oxygen: 40 × 240 = 9,600 units
+                        🌍 PI Material - made from:
+                           ⛏️  Noble Gas (P0): 3000 × 9,600 = 28,800,000 units
+                     🔧 Biomass: 40 × 240 = 9,600 units
+                        🌍 PI Material - made from:
+                           ⛏️  Planktic Colonies (P0): 3000 × 9,600 = 28,800,000 units
+               🔧 Microfiber Shielding: 10 × 24 = 240 units
+                  🌍 PI Material - made from:
+                     🔧 Industrial Fibers: 40 × 240 = 9,600 units
+                        🌍 PI Material - made from:
+                           ⛏️  Autotrophs (P0): 3000 × 9,600 = 28,800,000 units
+                     🔧 Silicon: 40 × 240 = 9,600 units
+                        🌍 PI Material - made from:
+                           ⛏️  Felsic Magma (P0): 3000 × 9,600 = 28,800,000 units
+         🔧 High-Tech Transmitters: 6 × 4 = 24 units
+            🌍 PI Material - made from:
+               🔧 Polyaramids: 10 × 24 = 240 units
+                  🌍 PI Material - made from:
+                     🔧 Oxidizing Compound: 40 × 240 = 9,600 units
+                        🌍 PI Material - made from:
+                           ⛏️  Reactive Gas (P0): 3000 × 9,600 = 28,800,000 units
+                     🔧 Industrial Fibers: 40 × 240 = 9,600 units
+                        🌍 PI Material - made from:
+                           ⛏️  Autotrophs (P0): 3000 × 9,600 = 28,800,000 units
+               🔧 Transmitter: 10 × 24 = 240 units
+                  🌍 PI Material - made from:
+                     🔧 Plasmoids: 40 × 240 = 9,600 units
+                        🌍 PI Material - made from:
+                           ⛏️  Suspended Plasma (P0): 3000 × 9,600 = 28,800,000 units
+                     🔧 Chiral Structures: 40 × 240 = 9,600 units
+                        🌍 PI Material - made from:
+                           ⛏️  Non-CS Crystals (P0): 3000 × 9,600 = 28,800,000 units
+      ⛏️ Reinforced Carbon Fiber: 100 × 4 = 400 units
+      ⚗️  Reaction - made from:
+         🔧 Carbon Fiber: 200 × 400 = 80,000 units
+            ⚗️  Reaction - made from:
+               ⛏️  Hydrogen Fuel Block (moon/fuel): 5 × 80,000 = 400,000 units
+               ⛏️  Hydrocarbons (moon/fuel): 100 × 80,000 = 8,000,000 units
+               ⛏️  Evaporite Deposits (moon/fuel): 100 × 80,000 = 8,000,000 units
+         🔧 Oxy-Organic Solvents: 1 × 400 = 400 units
+            ⚗️  Reaction - made from:
+               ⛏️  Oxygen Fuel Block (moon/fuel): 5 × 400 = 2,000 units
+               ⛏️  Hydrocarbons (moon/fuel): 2000 × 400 = 800,000 units
+               ⛏️  Atmospheric Gases (moon/fuel): 2000 × 400 = 800,000 units
+         🔧 Thermosetting Polymer: 200 × 400 = 80,000 units
+            ⚗️  Reaction - made from:
+               ⛏️  Oxygen Fuel Block (moon/fuel): 5 × 80,000 = 400,000 units
+               ⛏️  Atmospheric Gases (moon/fuel): 100 × 80,000 = 8,000,000 units
+               ⛏️  Silicates (moon/fuel): 100 × 80,000 = 8,000,000 units
+      ⛏️ Megacyte: 285 × 4 = 1,140 units
+      ⛏️ Zydrine: 570 × 4 = 2,280 units
+      ⛏️ Nocxium: 1,125 × 4 = 4,500 units
+      ⛏️ Isogen: 11,250 × 4 = 45,000 units
+      ⛏️ Tritanium: 40,500 × 4 = 162,000 units
+      ⛏️ Mexallon: 40,500 × 4 = 162,000 units
+      ⛏️ Pyerite: 146,250 × 4 = 585,000 units
+
+🔧 Capital Capacitor Battery (need 9 units):
+   Manufacturing: 9 run(s) × 1 per run = 9 units
+   Direct materials per run:
+      ⛏️ Self-Harmonizing Power Core: 1 × 9 = 9 units
+      🌍 PI Material - made from:
+         🔧 Camera Drones: 6 × 9 = 54 units
+            🌍 PI Material - made from:
+               🔧 Silicate Glass: 10 × 54 = 540 units
+                  🌍 PI Material - made from:
+                     🔧 Oxidizing Compound: 40 × 540 = 21,600 units
+                        🌍 PI Material - made from:
+                           ⛏️  Reactive Gas (P0): 3000 × 21,600 = 64,800,000 units
+                     🔧 Silicon: 40 × 540 = 21,600 units
+                        🌍 PI Material - made from:
+                           ⛏️  Felsic Magma (P0): 3000 × 21,600 = 64,800,000 units
+               🔧 Rocket Fuel: 10 × 54 = 540 units
+                  🌍 PI Material - made from:
+                     🔧 Plasmoids: 40 × 540 = 21,600 units
+                        🌍 PI Material - made from:
+                           ⛏️  Suspended Plasma (P0): 3000 × 21,600 = 64,800,000 units
+                     🔧 Electrolytes: 40 × 540 = 21,600 units
+                        🌍 PI Material - made from:
+                           ⛏️  Ionic Solutions (P0): 3000 × 21,600 = 64,800,000 units
+         🔧 Nuclear Reactors: 6 × 9 = 54 units
+            🌍 PI Material - made from:
+               🔧 Enriched Uranium: 10 × 54 = 540 units
+                  🌍 PI Material - made from:
+                     🔧 Precious Metals: 40 × 540 = 21,600 units
+                        🌍 PI Material - made from:
+                           ⛏️  Noble Metals (P0): 3000 × 21,600 = 64,800,000 units
+                     🔧 Toxic Metals: 40 × 540 = 21,600 units
+                        🌍 PI Material - made from:
+                           ⛏️  Heavy Metals (P0): 3000 × 21,600 = 64,800,000 units
+               🔧 Microfiber Shielding: 10 × 54 = 540 units
+                  🌍 PI Material - made from:
+                     🔧 Industrial Fibers: 40 × 540 = 21,600 units
+                        🌍 PI Material - made from:
+                           ⛏️  Autotrophs (P0): 3000 × 21,600 = 64,800,000 units
+                     🔧 Silicon: 40 × 540 = 21,600 units
+                        🌍 PI Material - made from:
+                           ⛏️  Felsic Magma (P0): 3000 × 21,600 = 64,800,000 units
+         🔧 Hermetic Membranes: 6 × 9 = 54 units
+            🌍 PI Material - made from:
+               🔧 Polyaramids: 10 × 54 = 540 units
+                  🌍 PI Material - made from:
+                     🔧 Oxidizing Compound: 40 × 540 = 21,600 units
+                        🌍 PI Material - made from:
+                           ⛏️  Reactive Gas (P0): 3000 × 21,600 = 64,800,000 units
+                     🔧 Industrial Fibers: 40 × 540 = 21,600 units
+                        🌍 PI Material - made from:
+                           ⛏️  Autotrophs (P0): 3000 × 21,600 = 64,800,000 units
+               🔧 Genetically Enhanced Livestock: 10 × 54 = 540 units
+                  🌍 PI Material - made from:
+                     🔧 Proteins: 40 × 540 = 21,600 units
+                        🌍 PI Material - made from:
+                           ⛏️  Complex Organisms (P0): 3000 × 21,600 = 64,800,000 units
+                     🔧 Biomass: 40 × 540 = 21,600 units
+                        🌍 PI Material - made from:
+                           ⛏️  Planktic Colonies (P0): 3000 × 21,600 = 64,800,000 units
+      ⛏️ Reinforced Carbon Fiber: 100 × 9 = 900 units
+      ⚗️  Reaction - made from:
+         🔧 Carbon Fiber: 200 × 900 = 180,000 units
+            ⚗️  Reaction - made from:
+               ⛏️  Hydrogen Fuel Block (moon/fuel): 5 × 180,000 = 900,000 units
+               ⛏️  Hydrocarbons (moon/fuel): 100 × 180,000 = 18,000,000 units
+               ⛏️  Evaporite Deposits (moon/fuel): 100 × 180,000 = 18,000,000 units
+         🔧 Oxy-Organic Solvents: 1 × 900 = 900 units
+            ⚗️  Reaction - made from:
+               ⛏️  Oxygen Fuel Block (moon/fuel): 5 × 900 = 4,500 units
+               ⛏️  Hydrocarbons (moon/fuel): 2000 × 900 = 1,800,000 units
+               ⛏️  Atmospheric Gases (moon/fuel): 2000 × 900 = 1,800,000 units
+         🔧 Thermosetting Polymer: 200 × 900 = 180,000 units
+            ⚗️  Reaction - made from:
+               ⛏️  Oxygen Fuel Block (moon/fuel): 5 × 180,000 = 900,000 units
+               ⛏️  Atmospheric Gases (moon/fuel): 100 × 180,000 = 18,000,000 units
+               ⛏️  Silicates (moon/fuel): 100 × 180,000 = 18,000,000 units
+      ⛏️ Megacyte: 278 × 9 = 2,502 units
+      ⛏️ Zydrine: 548 × 9 = 4,932 units
+      ⛏️ Nocxium: 1,125 × 9 = 10,125 units
+      ⛏️ Isogen: 11,250 × 9 = 101,250 units
+      ⛏️ Tritanium: 39,000 × 9 = 351,000 units
+      ⛏️ Mexallon: 39,000 × 9 = 351,000 units
+      ⛏️ Pyerite: 142,500 × 9 = 1,282,500 units
+
+🔧 Capital Cargo Bay (need 38 units):
+   Manufacturing: 38 run(s) × 1 per run = 38 units
+   Direct materials per run:
+      ⛏️ Reinforced Carbon Fiber: 100 × 38 = 3,800 units
+      ⚗️  Reaction - made from:
+         🔧 Carbon Fiber: 200 × 3,800 = 760,000 units
+            ⚗️  Reaction - made from:
+               ⛏️  Hydrogen Fuel Block (moon/fuel): 5 × 760,000 = 3,800,000 units
+               ⛏️  Hydrocarbons (moon/fuel): 100 × 760,000 = 76,000,000 units
+               ⛏️  Evaporite Deposits (moon/fuel): 100 × 760,000 = 76,000,000 units
+         🔧 Oxy-Organic Solvents: 1 × 3,800 = 3,800 units
+            ⚗️  Reaction - made from:
+               ⛏️  Oxygen Fuel Block (moon/fuel): 5 × 3,800 = 19,000 units
+               ⛏️  Hydrocarbons (moon/fuel): 2000 × 3,800 = 7,600,000 units
+               ⛏️  Atmospheric Gases (moon/fuel): 2000 × 3,800 = 7,600,000 units
+         🔧 Thermosetting Polymer: 200 × 3,800 = 760,000 units
+            ⚗️  Reaction - made from:
+               ⛏️  Oxygen Fuel Block (moon/fuel): 5 × 760,000 = 3,800,000 units
+               ⛏️  Atmospheric Gases (moon/fuel): 100 × 760,000 = 76,000,000 units
+               ⛏️  Silicates (moon/fuel): 100 × 760,000 = 76,000,000 units
+      ⛏️ Megacyte: 380 × 38 = 14,440 units
+      ⛏️ Zydrine: 760 × 38 = 28,880 units
+      ⛏️ Nocxium: 1,500 × 38 = 57,000 units
+      ⛏️ Isogen: 15,000 × 38 = 570,000 units
+      ⛏️ Tritanium: 54,000 × 38 = 2,052,000 units
+      ⛏️ Mexallon: 54,000 × 38 = 2,052,000 units
+      ⛏️ Pyerite: 195,000 × 38 = 7,410,000 units
+
+🔧 Capital Computer System (need 7 units):
+   Manufacturing: 7 run(s) × 1 per run = 7 units
+   Direct materials per run:
+      ⛏️ Recursive Computing Module: 1 × 7 = 7 units
+      🌍 PI Material - made from:
+         🔧 Synthetic Synapses: 6 × 7 = 42 units
+            🌍 PI Material - made from:
+               🔧 Supertensile Plastics: 10 × 42 = 420 units
+                  🌍 PI Material - made from:
+                     🔧 Oxygen: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Noble Gas (P0): 3000 × 16,800 = 50,400,000 units
+                     🔧 Biomass: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Planktic Colonies (P0): 3000 × 16,800 = 50,400,000 units
+               🔧 Test Cultures: 10 × 42 = 420 units
+                  🌍 PI Material - made from:
+                     🔧 Bacteria: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Microorganisms (P0): 3000 × 16,800 = 50,400,000 units
+                     🔧 Water: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Aqueous Liquids (P0): 3000 × 16,800 = 50,400,000 units
+         🔧 Guidance Systems: 6 × 7 = 42 units
+            🌍 PI Material - made from:
+               🔧 Water-Cooled CPU: 10 × 42 = 420 units
+                  🌍 PI Material - made from:
+                     🔧 Reactive Metals: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Base Metals (P0): 3000 × 16,800 = 50,400,000 units
+                     🔧 Water: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Aqueous Liquids (P0): 3000 × 16,800 = 50,400,000 units
+               🔧 Transmitter: 10 × 42 = 420 units
+                  🌍 PI Material - made from:
+                     🔧 Plasmoids: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Suspended Plasma (P0): 3000 × 16,800 = 50,400,000 units
+                     🔧 Chiral Structures: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Non-CS Crystals (P0): 3000 × 16,800 = 50,400,000 units
+         🔧 Transcranial Microcontrollers: 6 × 7 = 42 units
+            🌍 PI Material - made from:
+               🔧 Biocells: 10 × 42 = 420 units
+                  🌍 PI Material - made from:
+                     🔧 Biofuels: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Carbon Compounds (P0): 3000 × 16,800 = 50,400,000 units
+                     🔧 Precious Metals: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Noble Metals (P0): 3000 × 16,800 = 50,400,000 units
+               🔧 Nanites: 10 × 42 = 420 units
+                  🌍 PI Material - made from:
+                     🔧 Bacteria: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Microorganisms (P0): 3000 × 16,800 = 50,400,000 units
+                     🔧 Reactive Metals: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Base Metals (P0): 3000 × 16,800 = 50,400,000 units
+      ⛏️ Reinforced Carbon Fiber: 100 × 7 = 700 units
+      ⚗️  Reaction - made from:
+         🔧 Carbon Fiber: 200 × 700 = 140,000 units
+            ⚗️  Reaction - made from:
+               ⛏️  Hydrogen Fuel Block (moon/fuel): 5 × 140,000 = 700,000 units
+               ⛏️  Hydrocarbons (moon/fuel): 100 × 140,000 = 14,000,000 units
+               ⛏️  Evaporite Deposits (moon/fuel): 100 × 140,000 = 14,000,000 units
+         🔧 Oxy-Organic Solvents: 1 × 700 = 700 units
+            ⚗️  Reaction - made from:
+               ⛏️  Oxygen Fuel Block (moon/fuel): 5 × 700 = 3,500 units
+               ⛏️  Hydrocarbons (moon/fuel): 2000 × 700 = 1,400,000 units
+               ⛏️  Atmospheric Gases (moon/fuel): 2000 × 700 = 1,400,000 units
+         🔧 Thermosetting Polymer: 200 × 700 = 140,000 units
+            ⚗️  Reaction - made from:
+               ⛏️  Oxygen Fuel Block (moon/fuel): 5 × 140,000 = 700,000 units
+               ⛏️  Atmospheric Gases (moon/fuel): 100 × 140,000 = 14,000,000 units
+               ⛏️  Silicates (moon/fuel): 100 × 140,000 = 14,000,000 units
+      ⛏️ Megacyte: 285 × 7 = 1,995 units
+      ⛏️ Zydrine: 570 × 7 = 3,990 units
+      ⛏️ Nocxium: 1,125 × 7 = 7,875 units
+      ⛏️ Isogen: 11,250 × 7 = 78,750 units
+      ⛏️ Tritanium: 40,500 × 7 = 283,500 units
+      ⛏️ Mexallon: 40,500 × 7 = 283,500 units
+      ⛏️ Pyerite: 146,250 × 7 = 1,023,750 units
+
+🔧 Capital Construction Parts (need 16 units):
+   Manufacturing: 16 run(s) × 1 per run = 16 units
+   Direct materials per run:
+      ⛏️ Reinforced Carbon Fiber: 100 × 16 = 1,600 units
+      ⚗️  Reaction - made from:
+         🔧 Carbon Fiber: 200 × 1,600 = 320,000 units
+            ⚗️  Reaction - made from:
+               ⛏️  Hydrogen Fuel Block (moon/fuel): 5 × 320,000 = 1,600,000 units
+               ⛏️  Hydrocarbons (moon/fuel): 100 × 320,000 = 32,000,000 units
+               ⛏️  Evaporite Deposits (moon/fuel): 100 × 320,000 = 32,000,000 units
+         🔧 Oxy-Organic Solvents: 1 × 1,600 = 1,600 units
+            ⚗️  Reaction - made from:
+               ⛏️  Oxygen Fuel Block (moon/fuel): 5 × 1,600 = 8,000 units
+               ⛏️  Hydrocarbons (moon/fuel): 2000 × 1,600 = 3,200,000 units
+               ⛏️  Atmospheric Gases (moon/fuel): 2000 × 1,600 = 3,200,000 units
+         🔧 Thermosetting Polymer: 200 × 1,600 = 320,000 units
+            ⚗️  Reaction - made from:
+               ⛏️  Oxygen Fuel Block (moon/fuel): 5 × 320,000 = 1,600,000 units
+               ⛏️  Atmospheric Gases (moon/fuel): 100 × 320,000 = 32,000,000 units
+               ⛏️  Silicates (moon/fuel): 100 × 320,000 = 32,000,000 units
+      ⛏️ Megacyte: 210 × 16 = 3,360 units
+      ⛏️ Zydrine: 413 × 16 = 6,608 units
+      ⛏️ Nocxium: 750 × 16 = 12,000 units
+      ⛏️ Isogen: 9,000 × 16 = 144,000 units
+      ⛏️ Tritanium: 30,000 × 16 = 480,000 units
+      ⛏️ Mexallon: 30,000 × 16 = 480,000 units
+      ⛏️ Pyerite: 105,000 × 16 = 1,680,000 units
+
+🔧 Capital Ship Maintenance Bay (need 7 units):
+   Manufacturing: 7 run(s) × 1 per run = 7 units
+   Direct materials per run:
+      ⛏️ Integrity Response Drones: 1 × 7 = 7 units
+      🌍 PI Material - made from:
+         🔧 Gel-Matrix Biopaste: 6 × 7 = 42 units
+            🌍 PI Material - made from:
+               🔧 Oxides: 10 × 42 = 420 units
+                  🌍 PI Material - made from:
+                     🔧 Oxidizing Compound: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Reactive Gas (P0): 3000 × 16,800 = 50,400,000 units
+                     🔧 Oxygen: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Noble Gas (P0): 3000 × 16,800 = 50,400,000 units
+               🔧 Biocells: 10 × 42 = 420 units
+                  🌍 PI Material - made from:
+                     🔧 Biofuels: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Carbon Compounds (P0): 3000 × 16,800 = 50,400,000 units
+                     🔧 Precious Metals: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Noble Metals (P0): 3000 × 16,800 = 50,400,000 units
+               🔧 Superconductors: 10 × 42 = 420 units
+                  🌍 PI Material - made from:
+                     🔧 Plasmoids: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Suspended Plasma (P0): 3000 × 16,800 = 50,400,000 units
+                     🔧 Water: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Aqueous Liquids (P0): 3000 × 16,800 = 50,400,000 units
+         🔧 Hazmat Detection Systems: 6 × 7 = 42 units
+            🌍 PI Material - made from:
+               🔧 Polytextiles: 10 × 42 = 420 units
+                  🌍 PI Material - made from:
+                     🔧 Biofuels: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Carbon Compounds (P0): 3000 × 16,800 = 50,400,000 units
+                     🔧 Industrial Fibers: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Autotrophs (P0): 3000 × 16,800 = 50,400,000 units
+               🔧 Viral Agent: 10 × 42 = 420 units
+                  🌍 PI Material - made from:
+                     🔧 Bacteria: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Microorganisms (P0): 3000 × 16,800 = 50,400,000 units
+                     🔧 Biomass: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Planktic Colonies (P0): 3000 × 16,800 = 50,400,000 units
+               🔧 Transmitter: 10 × 42 = 420 units
+                  🌍 PI Material - made from:
+                     🔧 Plasmoids: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Suspended Plasma (P0): 3000 × 16,800 = 50,400,000 units
+                     🔧 Chiral Structures: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Non-CS Crystals (P0): 3000 × 16,800 = 50,400,000 units
+         🔧 Planetary Vehicles: 6 × 7 = 42 units
+            🌍 PI Material - made from:
+               🔧 Supertensile Plastics: 10 × 42 = 420 units
+                  🌍 PI Material - made from:
+                     🔧 Oxygen: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Noble Gas (P0): 3000 × 16,800 = 50,400,000 units
+                     🔧 Biomass: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Planktic Colonies (P0): 3000 × 16,800 = 50,400,000 units
+               🔧 Mechanical Parts: 10 × 42 = 420 units
+                  🌍 PI Material - made from:
+                     🔧 Reactive Metals: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Base Metals (P0): 3000 × 16,800 = 50,400,000 units
+                     🔧 Precious Metals: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Noble Metals (P0): 3000 × 16,800 = 50,400,000 units
+               🔧 Miniature Electronics: 10 × 42 = 420 units
+                  🌍 PI Material - made from:
+                     🔧 Chiral Structures: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Non-CS Crystals (P0): 3000 × 16,800 = 50,400,000 units
+                     🔧 Silicon: 40 × 420 = 16,800 units
+                        🌍 PI Material - made from:
+                           ⛏️  Felsic Magma (P0): 3000 × 16,800 = 50,400,000 units
+      ⛏️ Reinforced Carbon Fiber: 100 × 7 = 700 units
+      ⚗️  Reaction - made from:
+         🔧 Carbon Fiber: 200 × 700 = 140,000 units
+            ⚗️  Reaction - made from:
+               ⛏️  Hydrogen Fuel Block (moon/fuel): 5 × 140,000 = 700,000 units
+               ⛏️  Hydrocarbons (moon/fuel): 100 × 140,000 = 14,000,000 units
+               ⛏️  Evaporite Deposits (moon/fuel): 100 × 140,000 = 14,000,000 units
+         🔧 Oxy-Organic Solvents: 1 × 700 = 700 units
+            ⚗️  Reaction - made from:
+               ⛏️  Oxygen Fuel Block (moon/fuel): 5 × 700 = 3,500 units
+               ⛏️  Hydrocarbons (moon/fuel): 2000 × 700 = 1,400,000 units
+               ⛏️  Atmospheric Gases (moon/fuel): 2000 × 700 = 1,400,000 units
+         🔧 Thermosetting Polymer: 200 × 700 = 140,000 units
+            ⚗️  Reaction - made from:
+               ⛏️  Oxygen Fuel Block (moon/fuel): 5 × 140,000 = 700,000 units
+               ⛏️  Atmospheric Gases (moon/fuel): 100 × 140,000 = 14,000,000 units
+               ⛏️  Silicates (moon/fuel): 100 × 140,000 = 14,000,000 units
+      ⛏️ Megacyte: 375 × 7 = 2,625 units
+      ⛏️ Zydrine: 750 × 7 = 5,250 units
+      ⛏️ Nocxium: 1,500 × 7 = 10,500 units
+      ⛏️ Isogen: 15,000 × 7 = 105,000 units
+      ⛏️ Tritanium: 54,000 × 7 = 378,000 units
+      ⛏️ Mexallon: 54,000 × 7 = 378,000 units
+      ⛏️ Pyerite: 192,000 × 7 = 1,344,000 units
+
+🔧 Capital Corporate Hangar Bay (need 4 units):
+   Manufacturing: 4 run(s) × 1 per run = 4 units
+   Direct materials per run:
+      ⛏️ Reinforced Carbon Fiber: 100 × 4 = 400 units
+      ⚗️  Reaction - made from:
+         🔧 Carbon Fiber: 200 × 400 = 80,000 units
+            ⚗️  Reaction - made from:
+               ⛏️  Hydrogen Fuel Block (moon/fuel): 5 × 80,000 = 400,000 units
+               ⛏️  Hydrocarbons (moon/fuel): 100 × 80,000 = 8,000,000 units
+               ⛏️  Evaporite Deposits (moon/fuel): 100 × 80,000 = 8,000,000 units
+         🔧 Oxy-Organic Solvents: 1 × 400 = 400 units
+            ⚗️  Reaction - made from:
+               ⛏️  Oxygen Fuel Block (moon/fuel): 5 × 400 = 2,000 units
+               ⛏️  Hydrocarbons (moon/fuel): 2000 × 400 = 800,000 units
+               ⛏️  Atmospheric Gases (moon/fuel): 2000 × 400 = 800,000 units
+         🔧 Thermosetting Polymer: 200 × 400 = 80,000 units
+            ⚗️  Reaction - made from:
+               ⛏️  Oxygen Fuel Block (moon/fuel): 5 × 80,000 = 400,000 units
+               ⛏️  Atmospheric Gases (moon/fuel): 100 × 80,000 = 8,000,000 units
+               ⛏️  Silicates (moon/fuel): 100 × 80,000 = 8,000,000 units
+      ⛏️ Megacyte: 398 × 4 = 1,592 units
+      ⛏️ Zydrine: 788 × 4 = 3,152 units
+      ⛏️ Nocxium: 1,650 × 4 = 6,600 units
+      ⛏️ Isogen: 16,500 × 4 = 66,000 units
+      ⛏️ Tritanium: 56,250 × 4 = 225,000 units
+      ⛏️ Mexallon: 56,250 × 4 = 225,000 units
+      ⛏️ Pyerite: 202,500 × 4 = 810,000 units
+
+🔧 Auto-Integrity Preservation Seal (need 200 units):
+   Manufacturing: 67 run(s) × 3 per run = 200 units
+   Direct materials per run:
+      ⛏️ Supertensile Plastics: 4 × 67 = 268 units
+      🌍 PI Material - made from:
+         🔧 Oxygen: 40 × 268 = 10,720 units
+            🌍 PI Material - made from:
+               ⛏️  Noble Gas (P0): 3000 × 10,720 = 32,160,000 units
+         🔧 Biomass: 40 × 268 = 10,720 units
+            🌍 PI Material - made from:
+               ⛏️  Planktic Colonies (P0): 3000 × 10,720 = 32,160,000 units
+      ⛏️ Nanites: 4 × 67 = 268 units
+      🌍 PI Material - made from:
+         🔧 Bacteria: 40 × 268 = 10,720 units
+            🌍 PI Material - made from:
+               ⛏️  Microorganisms (P0): 3000 × 10,720 = 32,160,000 units
+         🔧 Reactive Metals: 40 × 268 = 10,720 units
+            🌍 PI Material - made from:
+               ⛏️  Base Metals (P0): 3000 × 10,720 = 32,160,000 units
+      ⛏️ Reinforced Carbon Fiber: 10 × 67 = 670 units
+      ⚗️  Reaction - made from:
+         🔧 Carbon Fiber: 200 × 670 = 134,000 units
+            ⚗️  Reaction - made from:
+               ⛏️  Hydrogen Fuel Block (moon/fuel): 5 × 134,000 = 670,000 units
+               ⛏️  Hydrocarbons (moon/fuel): 100 × 134,000 = 13,400,000 units
+               ⛏️  Evaporite Deposits (moon/fuel): 100 × 134,000 = 13,400,000 units
+         🔧 Oxy-Organic Solvents: 1 × 670 = 670 units
+            ⚗️  Reaction - made from:
+               ⛏️  Oxygen Fuel Block (moon/fuel): 5 × 670 = 3,350 units
+               ⛏️  Hydrocarbons (moon/fuel): 2000 × 670 = 1,340,000 units
+               ⛏️  Atmospheric Gases (moon/fuel): 2000 × 670 = 1,340,000 units
+         🔧 Thermosetting Polymer: 200 × 670 = 134,000 units
+            ⚗️  Reaction - made from:
+               ⛏️  Oxygen Fuel Block (moon/fuel): 5 × 134,000 = 670,000 units
+               ⛏️  Atmospheric Gases (moon/fuel): 100 × 134,000 = 13,400,000 units
+               ⛏️  Silicates (moon/fuel): 100 × 134,000 = 13,400,000 units
+
+🔧 Core Temperature Regulator (need 25 units):
+   Manufacturing: 25 run(s) × 1 per run = 25 units
+   Direct materials per run:
+      ⛏️ Chiral Structures: 100 × 25 = 2,500 units
+      🌍 PI Material - made from:
+         ⛏️  Non-CS Crystals (P0): 3000 × 2,500 = 7,500,000 units
+      ⛏️ Water: 100 × 25 = 2,500 units
+      🌍 PI Material - made from:
+         ⛏️  Aqueous Liquids (P0): 3000 × 2,500 = 7,500,000 units
+      ⛏️ Pressurized Oxidizers: 500 × 25 = 12,500 units
+      ⚗️  Reaction - made from:
+         🔧 Carbon Polymers: 200 × 12,500 = 2,500,000 units
+            ⚗️  Reaction - made from:
+               ⛏️  Helium Fuel Block (moon/fuel): 5 × 2,500,000 = 12,500,000 units
+               ⛏️  Hydrocarbons (moon/fuel): 100 × 2,500,000 = 250,000,000 units
+               ⛏️  Silicates (moon/fuel): 100 × 2,500,000 = 250,000,000 units
+         🔧 Sulfuric Acid: 200 × 12,500 = 2,500,000 units
+            ⚗️  Reaction - made from:
+               ⛏️  Nitrogen Fuel Block (moon/fuel): 5 × 2,500,000 = 12,500,000 units
+               ⛏️  Atmospheric Gases (moon/fuel): 100 × 2,500,000 = 250,000,000 units
+               ⛏️  Evaporite Deposits (moon/fuel): 100 × 2,500,000 = 250,000,000 units
+         🔧 Oxy-Organic Solvents: 1 × 12,500 = 12,500 units
+            ⚗️  Reaction - made from:
+               ⛏️  Oxygen Fuel Block (moon/fuel): 5 × 12,500 = 62,500 units
+               ⛏️  Hydrocarbons (moon/fuel): 2000 × 12,500 = 25,000,000 units
+               ⛏️  Atmospheric Gases (moon/fuel): 2000 × 12,500 = 25,000,000 units
+      ⛏️ Reinforced Carbon Fiber: 500 × 25 = 12,500 units
+      ⚗️  Reaction - made from:
+         🔧 Carbon Fiber: 200 × 12,500 = 2,500,000 units
+            ⚗️  Reaction - made from:
+               ⛏️  Hydrogen Fuel Block (moon/fuel): 5 × 2,500,000 = 12,500,000 units
+               ⛏️  Hydrocarbons (moon/fuel): 100 × 2,500,000 = 250,000,000 units
+               ⛏️  Evaporite Deposits (moon/fuel): 100 × 2,500,000 = 250,000,000 units
+         🔧 Oxy-Organic Solvents: 1 × 12,500 = 12,500 units
+            ⚗️  Reaction - made from:
+               ⛏️  Oxygen Fuel Block (moon/fuel): 5 × 12,500 = 62,500 units
+               ⛏️  Hydrocarbons (moon/fuel): 2000 × 12,500 = 25,000,000 units
+               ⛏️  Atmospheric Gases (moon/fuel): 2000 × 12,500 = 25,000,000 units
+         🔧 Thermosetting Polymer: 200 × 12,500 = 2,500,000 units
+            ⚗️  Reaction - made from:
+               ⛏️  Oxygen Fuel Block (moon/fuel): 5 × 2,500,000 = 12,500,000 units
+               ⛏️  Atmospheric Gases (moon/fuel): 100 × 2,500,000 = 250,000,000 units
+               ⛏️  Silicates (moon/fuel): 100 × 2,500,000 = 250,000,000 units
+
+🔧 Life Support Backup Unit (need 100 units):
+   Manufacturing: 34 run(s) × 3 per run = 100 units
+   Direct materials per run:
+      ⛏️ Test Cultures: 8 × 34 = 272 units
+      🌍 PI Material - made from:
+         🔧 Bacteria: 40 × 272 = 10,880 units
+            🌍 PI Material - made from:
+               ⛏️  Microorganisms (P0): 3000 × 10,880 = 32,640,000 units
+         🔧 Water: 40 × 272 = 10,880 units
+            🌍 PI Material - made from:
+               ⛏️  Aqueous Liquids (P0): 3000 × 10,880 = 32,640,000 units
+      ⛏️ Viral Agent: 8 × 34 = 272 units
+      🌍 PI Material - made from:
+         🔧 Bacteria: 40 × 272 = 10,880 units
+            🌍 PI Material - made from:
+               ⛏️  Microorganisms (P0): 3000 × 10,880 = 32,640,000 units
+         🔧 Biomass: 40 × 272 = 10,880 units
+            🌍 PI Material - made from:
+               ⛏️  Planktic Colonies (P0): 3000 × 10,880 = 32,640,000 units
+      ⛏️ Reinforced Carbon Fiber: 10 × 34 = 340 units
+      ⚗️  Reaction - made from:
+         🔧 Carbon Fiber: 200 × 340 = 68,000 units
+            ⚗️  Reaction - made from:
+               ⛏️  Hydrogen Fuel Block (moon/fuel): 5 × 68,000 = 340,000 units
+               ⛏️  Hydrocarbons (moon/fuel): 100 × 68,000 = 6,800,000 units
+               ⛏️  Evaporite Deposits (moon/fuel): 100 × 68,000 = 6,800,000 units
+         🔧 Oxy-Organic Solvents: 1 × 340 = 340 units
+            ⚗️  Reaction - made from:
+               ⛏️  Oxygen Fuel Block (moon/fuel): 5 × 340 = 1,700 units
+               ⛏️  Hydrocarbons (moon/fuel): 2000 × 340 = 680,000 units
+               ⛏️  Atmospheric Gases (moon/fuel): 2000 × 340 = 680,000 units
+         🔧 Thermosetting Polymer: 200 × 340 = 68,000 units
+            ⚗️  Reaction - made from:
+               ⛏️  Oxygen Fuel Block (moon/fuel): 5 × 68,000 = 340,000 units
+               ⛏️  Atmospheric Gases (moon/fuel): 100 × 68,000 = 6,800,000 units
+               ⛏️  Silicates (moon/fuel): 100 × 68,000 = 6,800,000 units
+
+================================================================================
+⛏️  TOTAL RAW MATERIALS NEEDED
+================================================================================
+
+Recursively calculating all raw materials (this may take a moment)...
+   Breaking down PI materials to P0 (raw planetary resources)...
+   Breaking down reaction products to moon materials...
+
+✓ Complete bill of materials:
+   33 different raw material types needed
+
+
+⛏️  Minerals (from mining ore):
+   ⛏️  Pyerite: 14,135,250 units
+   ⛏️  Tritanium: 3,931,500 units
+   ⛏️  Mexallon: 3,931,500 units
+   ⛏️  Isogen: 1,110,000 units
+   ⛏️  Nocxium: 108,600 units
+   ⛏️  Zydrine: 55,092 units
+   ⛏️  Megacyte: 27,654 units
+
+🌍 Planetary Interaction - P0 (extract from planets):
+   🌍 Noble Metals: 3,736,649,520,000 units
+   🌍 Base Metals: 2,906,275,920,000 units
+   🌍 Heavy Metals: 2,906,157,360,000 units
+   🌍 Non-CS Crystals: 2,075,967,900,000 units
+   🌍 Aqueous Liquids: 1,868,393,700,000 units
+   🌍 Ionic Solutions: 1,868,267,160,000 units
+   🌍 Noble Gas: 114,380,082,000 units
+   🌍 Planktic Colonies: 309,600,000 units
+   🌍 Microorganisms: 248,640,000 units
+   🌍 Suspended Plasma: 244,800,000 units
+   🌍 Reactive Gas: 237,600,000 units
+   🌍 Felsic Magma: 237,600,000 units
+   🌍 Autotrophs: 237,600,000 units
+   🌍 Carbon Compounds: 180,000,000 units
+   🌍 Complex Organisms: 64,800,000 units
+
+🌙 Moon Materials (from moon mining):
+   🌙 Hydrocarbons: 759,220,000 units
+   🌙 Atmospheric Gases: 759,220,000 units
+   🌙 Evaporite Deposits: 690,200,000 units
+   🌙 Silicates: 690,200,000 units
+
+❄️  Ice Products:
+   ❄️  Liquid Ozone: 605,435,950 units
+   ❄️  Heavy Water: 294,068,890 units
+   ❄️  Oxygen Isotopes: 249,555,150 units
+   ❄️  Hydrogen Isotopes: 247,612,500 units
+   ❄️  Helium Isotopes: 140,625,000 units
+   ❄️  Nitrogen Isotopes: 140,625,000 units
+   ❄️  Strontium Clathrates: 34,596,340 units
+
+================================================================================
+📚 ACQUISITION GUIDE - Where to Get Raw Materials
+================================================================================
+
+⛏️  MINERALS - Mining & Refining Ore:
+   Mine ore, then refine at station (requires Reprocessing skills)
+
+   • Pyerite: Mine Scordite (High Sec)
+     └─ Common in 0.7-1.0 systems
+   • Tritanium: Mine Veldspar (High Sec)
+     └─ Most common, anywhere
+   • Mexallon: Mine Pyroxeres (High Sec)
+     └─ Common in 0.5-0.9 systems
+   • Isogen: Mine Omber (Low Sec (0.4-0.1))
+     └─ Some in 0.4-0.7 high sec
+   • Nocxium: Mine Hemorphite (Low/Null Sec)
+     └─ Rare in high sec
+   • Zydrine: Mine Bistot (Null Sec (0.0))
+     └─ Requires expedition to null
+   • Megacyte: Mine Arkonor (Null Sec (0.0))
+     └─ Best yields in null/wormholes
+
+🌍 PLANETARY INTERACTION (P0 Materials):
+   Extract from planets using Command Centers + Extractors
+   Better yields in Low Sec (×1.5) and Null Sec (×2.0)
+
+   • Noble Metals: Barren, Ice planets
+   • Base Metals: Barren, Lava, Ice planets
+   • Heavy Metals: Barren, Lava planets
+   • Non-CS Crystals: Ice, Barren planets
+   • Aqueous Liquids: Temperate, Oceanic planets
+   • Ionic Solutions: Storm, Gas planets
+   • Noble Gas: Gas, Storm planets
+   • Planktic Colonies: Oceanic, Temperate planets
+   • Microorganisms: Oceanic, Water planets
+   • Suspended Plasma: Plasma, Lava planets
+   • Reactive Gas: Gas, Storm planets
+   • Felsic Magma: Lava, Plasma planets
+   • Autotrophs: Temperate, Gas planets
+   • Carbon Compounds: Oceanic, Storm planets
+   • Complex Organisms: Temperate, Oceanic planets
+
+   💡 Tip: Set up extractors in Low/Null sec for better yields
+   💡 Use planetary production chains for passive income
+
+🌙 MOON MATERIALS - Moon Mining:
+   Requires Athanor or Tatara refinery (Low Sec 0.4 or Null Sec only)
+   Corporation/Alliance must own the structure
+
+   • Atmospheric Gases: Common in most moons (R4 rarity)
+   • Evaporite Deposits: Common in most moons (R4 rarity)
+   • Hydrocarbons: Common in most moons (R4 rarity)
+   • Silicates: Common in most moons (R4 rarity)
+
+   💡 Tip: Join a null-sec alliance with moon mining infrastructure
+   💡 Alternative: Buy from Jita market (often cheaper than mining)
+
+❄️  ICE PRODUCTS - Ice Mining & Refining:
+   Mine ice from ice belts, then refine at station
+   Ice belts spawn in specific systems (check Dotlan)
+
+   • Liquid Ozone:
+     └─ Mine Clear Icicle, Glacial Mass (High/Low Sec)
+     └─ Common in all regions
+   • Heavy Water:
+     └─ Mine Blue Ice (High Sec)
+     └─ Gallente space
+   • Oxygen Isotopes:
+     └─ Mine Oxygen Isotopes (High/Low/Null)
+     └─ Minmatar fuel, from Clear Icicle
+   • Hydrogen Isotopes:
+     └─ Mine Hydrogen Isotopes (High/Low/Null)
+     └─ Caldari fuel, from White Glaze
+   • Helium Isotopes:
+     └─ Mine Helium Isotopes (High/Low/Null)
+     └─ Amarr fuel, from Glare Crust
+   • Nitrogen Isotopes:
+     └─ Mine Nitrogen Isotopes (High/Low/Null)
+     └─ Gallente fuel, from Thick Blue Ice
+   • Strontium Clathrates:
+     └─ Mine Blue Ice, White Glaze (High/Low Sec)
+     └─ Structure reinforcement timer fuel
+
+================================================================================
+🏭 MANUFACTURING OUTPUT
+================================================================================
+   Produces: 1 × Orca
+   Base time: 416.7 hours
+
+================================================================================
+✨ Analysis complete!
+
+💡 Next steps:
+   1. Market price scanning (coming soon)
+   2. Mining time calculation (coming soon)
+   3. Cost comparison (coming soon)
