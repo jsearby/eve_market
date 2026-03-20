@@ -21,12 +21,14 @@ import json
 from pathlib import Path
 from typing import Dict, List
 from collections import defaultdict, Counter
-from tools.config import SDE_DIR, MKT_DIR, GRAPH_FILE
+from tools.config import SDE_DIR, MKT_DIR, GRAPH_FILE, REGION_GRAPH_FILE, SYSTEM_REGION_FILE
 from tools.sde_loader import find_sde_file
 
 SDE_URL = "https://eve-static-data-export.s3-eu-west-1.amazonaws.com/tranquility/sde.zip"
 UNIVERSE_DIR = SDE_DIR / "universe"
-GRAPH_OUTPUT = GRAPH_FILE
+GRAPH_OUTPUT        = GRAPH_FILE
+REGION_GRAPH_OUTPUT = REGION_GRAPH_FILE
+SYSTEM_REGION_OUTPUT = SYSTEM_REGION_FILE
 
 # ==============================================================================
 # PART 1: SDE Download
@@ -126,10 +128,13 @@ def download_sde():
 
 class UniverseGraphBuilder:
     def __init__(self):
-        self.system_to_stargates = {}  # system_id -> list of stargate_ids in that system
-        self.stargate_to_system = {}   # stargate_id -> system_id it's located in
+        self.system_to_stargates = {}   # system_id -> list of stargate_ids in that system
+        self.stargate_to_system = {}    # stargate_id -> system_id it's located in
         self.stargate_destinations = {} # stargate_id -> destination_stargate_id
         self.graph = defaultdict(list)  # system_id -> list of connected system_ids
+        self.system_to_region = {}      # system_id -> region_id
+        self.region_graph = defaultdict(set)  # region_id -> set of adjacent region_ids
+        self._region_id_cache = {}      # str(region_dir) -> region_id  (avoid re-reading same yaml)
         
     def build_graph_from_sde(self) -> Dict[int, List[int]]:
         """Build universe graph from SDE data"""
@@ -169,9 +174,16 @@ class UniverseGraphBuilder:
         print("\n✔️  Step 4: Validating graph integrity...")
         self._validate_graph()
         
-        # Step 5: Save to file
-        print(f"\n💾 Step 5: Saving to {GRAPH_OUTPUT}...")
+# Step 5: Save system graph
+        print(f"\n💾 Step 5: Saving system graph to {GRAPH_OUTPUT}...")
         self._save_graph()
+
+        # Step 6: Build and save region adjacency graph + system→region map
+        print(f"\n🗺️  Step 6: Building region adjacency graph...")
+        self._build_region_graph()
+        print(f"   ✅ {len(self.region_graph):,} regions mapped")
+        print(f"   ✅ {len(self.system_to_region):,} systems assigned to a region")
+        self._save_region_graph()
         
         print("\n" + "=" * 70)
         print(f"🎉 Universe graph complete!")
@@ -180,9 +192,9 @@ class UniverseGraphBuilder:
         return dict(self.graph)
     
     def _parse_all_systems(self, solar_system_files: List[Path]):
-        """Parse all solarsystem.yaml files and extract stargate data"""
+        """Parse all solarsystem.yaml files and extract stargate data + region mapping."""
         yaml_loader = yaml.CSafeLoader if hasattr(yaml, 'CSafeLoader') else yaml.SafeLoader
-        
+
         systems_processed = 0
         for idx, system_file in enumerate(solar_system_files, 1):
             if idx % 500 == 0 or idx == len(solar_system_files):
@@ -209,13 +221,39 @@ class UniverseGraphBuilder:
                         self.stargate_destinations[stargate_id] = destination
                 
                 self.system_to_stargates[system_id] = stargate_ids
+
+                # Map system → region via path: .../eve/REGION/CONST/SYSTEM/solarsystem.yaml
+                # region.yaml lives in the region dir (grandparent of constellation dir)
+                region_dir = system_file.parent.parent.parent
+                region_id = self._get_region_id(region_dir, yaml_loader)
+                if region_id:
+                    self.system_to_region[system_id] = region_id
+
                 systems_processed += 1
                 
-            except Exception as e:
+            except Exception:
                 continue
         
         print(f"  ✅ Successfully processed {systems_processed:,} systems")
-    
+
+    def _get_region_id(self, region_dir: Path, yaml_loader) -> int:
+        """Return the regionID from a region directory, caching the result."""
+        key = str(region_dir)
+        if key in self._region_id_cache:
+            return self._region_id_cache[key]
+        region_yaml = region_dir / "region.yaml"
+        if not region_yaml.exists():
+            self._region_id_cache[key] = None
+            return None
+        try:
+            with open(region_yaml, 'r', encoding='utf-8') as f:
+                data = yaml.load(f, Loader=yaml_loader)
+            region_id = data.get('regionID')
+            self._region_id_cache[key] = region_id
+            return region_id
+        except Exception:
+            self._region_id_cache[key] = None
+            return None
     def _build_adjacency_graph(self):
         """Build adjacency list from stargate connections"""
         for system_id, stargate_ids in self.system_to_stargates.items():
@@ -232,6 +270,40 @@ class UniverseGraphBuilder:
             
             self.graph[system_id] = sorted(list(connected_systems))
     
+    def _build_region_graph(self):
+        """Derive region adjacency from the system graph.
+
+        For every inter-system stargate that crosses a region boundary,
+        both regions are recorded as neighbours.
+        """
+        for system_id, neighbors in self.graph.items():
+            region_a = self.system_to_region.get(system_id)
+            if not region_a:
+                continue
+            for neighbor_id in neighbors:
+                region_b = self.system_to_region.get(neighbor_id)
+                if region_b and region_b != region_a:
+                    self.region_graph[region_a].add(region_b)
+                    self.region_graph[region_b].add(region_a)
+
+    def _save_region_graph(self):
+        """Save region adjacency graph and system→region map."""
+        SDE_DIR.mkdir(parents=True, exist_ok=True)
+
+        # universe_region_graph.json  — region_id -> sorted list of adjacent region_ids
+        region_graph_json = {str(k): sorted(list(v)) for k, v in self.region_graph.items()}
+        with open(REGION_GRAPH_OUTPUT, 'w') as f:
+            json.dump(region_graph_json, f, indent=2)
+        size_kb = REGION_GRAPH_OUTPUT.stat().st_size / 1024
+        print(f"   💾 {REGION_GRAPH_OUTPUT.name}: {size_kb:.1f} KB")
+
+        # system_region.json  — system_id -> region_id
+        system_region_json = {str(k): v for k, v in self.system_to_region.items()}
+        with open(SYSTEM_REGION_OUTPUT, 'w') as f:
+            json.dump(system_region_json, f, indent=2)
+        size_kb = SYSTEM_REGION_OUTPUT.stat().st_size / 1024
+        print(f"   💾 {SYSTEM_REGION_OUTPUT.name}: {size_kb:.1f} KB")
+
     def _validate_graph(self):
         """Validate graph consistency"""
         isolated_systems = []

@@ -23,6 +23,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from tools.character_model import format_isk
 from tools.config import ESI_BASE
+from tools.esi_market import fetch_market_orders
 
 # Major trade hubs with their station IDs
 TRADE_HUBS = {
@@ -73,20 +74,7 @@ class EVEMarketAnalyzer:
     
     def get_market_orders(self, region_id: int, type_id: int) -> List[Dict]:
         """Fetch market orders for an item in a region"""
-        url = f"{ESI_BASE}/markets/{region_id}/orders/"
-        params = {
-            'datasource': 'tranquility',
-            'order_type': 'all',
-            'type_id': type_id
-        }
-        
-        try:
-            response = self.session.get(url, params=params, timeout=10)
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
-            print(f"Error fetching market data: {e}")
-            return []
+        return fetch_market_orders(region_id, type_id, session=self.session)
     
     def get_station_orders(self, orders: List[Dict], station_id: int) -> Tuple[float, float, int, int]:
         """

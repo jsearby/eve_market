@@ -218,25 +218,69 @@ class ESIAuth:
         with open(path, 'w') as f:
             json.dump(data, f, indent=2)
 
+    def refresh_access_token(self) -> bool:
+        """
+        Use the saved refresh_token to silently obtain a new access_token.
+        EVE refresh tokens do not expire, so this works as long as the
+        application still has the required scopes.
+        Returns True on success, False if the refresh_token is missing or rejected.
+        """
+        if not self.refresh_token:
+            return False
+
+        auth_b64 = base64.b64encode(
+            f"{self.client_id}:{self.client_secret}".encode()
+        ).decode()
+
+        headers = {
+            "Authorization": f"Basic {auth_b64}",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Host": "login.eveonline.com",
+        }
+        data = {
+            "grant_type": "refresh_token",
+            "refresh_token": self.refresh_token,
+        }
+
+        try:
+            response = requests.post(self.TOKEN_URL, headers=headers, data=data, timeout=10)
+            response.raise_for_status()
+            token_data = response.json()
+            self.access_token = token_data["access_token"]
+            # ESI may rotate the refresh token — persist it if so
+            if "refresh_token" in token_data:
+                self.refresh_token = token_data["refresh_token"]
+            self._verify_token()
+            return True
+        except Exception:
+            return False
+
     def load_tokens(self, filename=None) -> bool:
-        """Load tokens from file"""
+        """Load tokens from file, transparently refreshing if the access token has expired."""
         path = filename or ESI_TOKENS_FILE
         try:
             with open(path, 'r') as f:
                 data = json.load(f)
-            
-            self.access_token = data.get('access_token')
+
+            self.access_token  = data.get('access_token')
             self.refresh_token = data.get('refresh_token')
-            self.character_id = data.get('character_id')
+            self.character_id  = data.get('character_id')
             self.character_name = data.get('character_name')
-            
-            # Verify token is still valid
+
+            # Happy path: access token still valid
             try:
                 self._verify_token()
                 return True
-            except:
-                return False
-        except:
+            except Exception:
+                pass
+
+            # Access token expired — try a silent OAuth refresh
+            if self.refresh_access_token():
+                self.save_tokens(path)   # persist the new tokens immediately
+                return True
+
+            return False
+        except Exception:
             return False
     
     def get_character_assets(self) -> Optional[List[Dict]]:
@@ -333,6 +377,20 @@ def save_client_credentials(client_id: str, client_secret: str, filename=None):
     print(f"✓ Credentials saved to {path}")
 
 
+def load_esi_credentials() -> tuple:
+    """
+    Silently resolve ESI credentials without any user interaction:
+      1. Environment variables EVE_CLIENT_ID / EVE_CLIENT_SECRET
+      2. Saved credentials file (cache/user/esi_credentials.json)
+    Returns (client_id, client_secret) or (None, None) if not found.
+    """
+    client_id = os.getenv('EVE_CLIENT_ID')
+    client_secret = os.getenv('EVE_CLIENT_SECRET')
+    if client_id and client_secret:
+        return client_id, client_secret
+    return load_client_credentials()
+
+
 def setup_esi_credentials() -> tuple:
     """
     Resolve ESI client credentials using priority order:
@@ -346,22 +404,22 @@ def setup_esi_credentials() -> tuple:
     print("=" * 80)
 
     # 1. Environment variables (set by cred.ps1)
-    client_id = os.getenv('EVE_CLIENT_ID')
-    client_secret = os.getenv('EVE_CLIENT_SECRET')
+    client_id, client_secret = load_esi_credentials()
     if client_id and client_secret:
-        print("\n✓ Found credentials in environment variables")
-        print(f"   Client ID: {client_id[:8]}...")
+        if os.getenv('EVE_CLIENT_ID'):
+            print("\n✓ Found credentials in environment variables")
+            print(f"   Client ID: {client_id[:8]}...")
+        else:
+            print("\n✓ Found saved credentials in file")
+            use_saved = input("Use saved credentials? (y/n): ").strip().lower()
+            if not use_saved or use_saved in ['y', 'yes']:
+                return client_id, client_secret
+            client_id = client_secret = None  # fall through to interactive
+
+    if client_id and client_secret:
         return client_id, client_secret
 
-    # 2. Saved credentials file
-    client_id, client_secret = load_client_credentials()
-    if client_id and client_secret:
-        print("\n✓ Found saved credentials in file")
-        use_saved = input("Use saved credentials? (y/n): ").strip().lower()
-        if use_saved in ['y', 'yes', '']:
-            return client_id, client_secret
-
-    # 3. Interactive prompt
+    # 2. Interactive prompt
     print("\n📝 You need to create an ESI application first!")
     print("\nSteps:")
     print("1. Go to: https://developers.eveonline.com/applications")

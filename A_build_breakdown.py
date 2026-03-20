@@ -9,22 +9,25 @@ Analyzes the most cost-efficient way to build items based on your skills
 - Tracks blueprint ownership
 
 Usage:
-  python A_manufacturing_optimizer.py --target "<item name>"
+  python A_build_breakdown.py --target "<item name>"
   
 Example:
-  python A_manufacturing_optimizer.py --target "Orca"
-  python A_manufacturing_optimizer.py --target "Retriever"
+  python A_build_breakdown.py --target "Orca"
+  python A_build_breakdown.py --target "Retriever"
 
 Requires: 2_refresh_sde.py and 3_refresh_user_profile.py to be run first
 ==============================================================================
 """
 
+import math
 import sys
+import webbrowser
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 from collections import defaultdict
 import argparse
-from tools.character_model import CharacterProfile, format_isk
+from datetime import datetime
+from tools.character_model import CharacterProfile, format_isk, load_profile_or_exit
 from tools.config import SDE_DIR, MKT_DIR
 from tools.sde_loader import find_sde_file, load_cached_yaml
 
@@ -141,12 +144,42 @@ class ManufacturingOptimizer:
             else:
                 self.planet_schematics = load_cached_yaml(schematics_file, "planet_schematics_cache.pkl", "planet schematics")
 
+            type_materials_file = find_sde_file("typeMaterials.yaml")
+            if not type_materials_file:
+                print(f"   ⚠️  typeMaterials.yaml not found - ore m³ estimates unavailable")
+                self.type_materials = {}
+            else:
+                self.type_materials = load_cached_yaml(type_materials_file, "type_materials_cache.pkl", "type materials")
+
+            # Reverse lookup: English name (lower) → type_id
+            self._types_by_name = {
+                v.get('name', {}).get('en', '').lower(): k
+                for k, v in self.types.items()
+                if v.get('name', {}).get('en')
+            }
+
             return True
 
         except Exception as e:
             print(f"✗ Error loading SDE: {e}")
             return False
     
+    def _ore_m3_per_mineral(self, ore_name: str, mineral_name: str) -> Optional[float]:
+        """Return m³ of ore needed to produce 1 unit of mineral at 100% refining."""
+        ore_id     = self._types_by_name.get(ore_name.lower())
+        mineral_id = self._types_by_name.get(mineral_name.lower())
+        if not ore_id or not mineral_id:
+            return None
+        ore_data = self.types.get(ore_id, {})
+        portion_size = ore_data.get('portionSize', 100)
+        volume       = ore_data.get('volume', 0.0)
+        for mat in self.type_materials.get(ore_id, {}).get('materials', []):
+            if mat.get('materialTypeID') == mineral_id:
+                qty_per_batch = mat.get('quantity', 0)
+                if qty_per_batch > 0:
+                    return (portion_size * volume) / qty_per_batch
+        return None
+
     def _extract_blueprints_from_assets(self):
         """Extract blueprint information from character assets using SDE data"""
         if not self.profile.assets:
@@ -566,7 +599,59 @@ class ManufacturingOptimizer:
                 blueprints_needed.update(sub_blueprints)
         
         return blueprints_needed
-    
+
+    def collect_build_tree(self, type_id: int, quantity: int = 1, visited: set = None) -> Dict:
+        """Recursively collect the full manufacturing tree as a nested dict."""
+        if visited is None:
+            visited = set()
+
+        name = self.get_item_name(type_id)
+        node: Dict = {
+            'name': name, 'type_id': type_id, 'quantity': quantity,
+            'node_type': 'raw', 'runs': 1, 'output_per_run': 1, 'children': []
+        }
+
+        if type_id in visited:
+            node['node_type'] = 'cycle'
+            return node
+
+        visited = visited | {type_id}
+
+        # Manufacturing blueprint
+        blueprint = self.get_blueprint_for_item(type_id)
+        if blueprint:
+            node['node_type'] = 'manufactured'
+            manufacturing = blueprint['data']['activities']['manufacturing']
+            products = manufacturing.get('products', [])
+            output_per_run = products[0].get('quantity', 1) if products else 1
+            runs_needed = math.ceil(quantity / output_per_run)
+            node['runs'] = runs_needed
+            node['output_per_run'] = output_per_run
+            for mat in manufacturing.get('materials', []):
+                child = self.collect_build_tree(mat['typeID'], mat['quantity'] * runs_needed, visited)
+                node['children'].append(child)
+            return node
+
+        # Reaction
+        reaction_inputs = self.get_reaction_inputs(type_id)
+        if reaction_inputs:
+            node['node_type'] = 'reaction'
+            for input_id, input_qty in reaction_inputs.items():
+                child = self.collect_build_tree(input_id, input_qty * quantity, visited)
+                node['children'].append(child)
+            return node
+
+        # Planetary Interaction
+        pi_inputs = self.get_pi_inputs(type_id)
+        if pi_inputs:
+            node['node_type'] = 'pi'
+            for input_id, input_qty in pi_inputs.items():
+                child = self.collect_build_tree(input_id, input_qty * quantity, visited)
+                node['children'].append(child)
+            return node
+
+        return node  # raw material
+
     def analyze_manufacturing(self, target_item: str) -> Dict:
         """Analyze manufacturing options for target item"""
         print(f"\n{'='*80}")
@@ -599,6 +684,7 @@ class ManufacturingOptimizer:
         print(f"Analyzing blueprint requirements (including all components)...")
         
         all_blueprints = self.collect_required_blueprints(type_id)
+        owned_blueprints = {}
         
         if all_blueprints:
             print(f"\n✓ Total blueprints needed: {len(all_blueprints)}")
@@ -780,23 +866,14 @@ class ManufacturingOptimizer:
         
         raw_materials = dict(final_materials)
         
+        classified_materials = {
+            'MINERAL': [], 'PI': [], 'MOON': [], 'FUEL': [], 'ADVANCED': [],
+            'ICE': [], 'MATERIAL': [], 'REACTION': [], 'REACTION_INT': [], 'OTHER': []
+        }
+
         if raw_materials:
             print(f"\n✓ Complete bill of materials:")
             print(f"   {len(raw_materials)} different raw material types needed\n")
-            
-            # Classify and group materials
-            classified_materials = {
-                'MINERAL': [],
-                'PI': [],
-                'MOON': [],
-                'FUEL': [],
-                'ADVANCED': [],
-                'ICE': [],
-                'MATERIAL': [],
-                'REACTION': [],
-                'REACTION_INT': [],
-                'OTHER': []
-            }
             
             for mat_id, mat_qty in raw_materials.items():
                 mat_name = self.get_item_name(mat_id)
@@ -854,8 +931,12 @@ class ManufacturingOptimizer:
                 for mat_name, mat_qty in classified_materials['MINERAL']:
                     if mat_name in mineral_ore_guide:
                         ore, location, notes = mineral_ore_guide[mat_name]
-                        print(f"   • {mat_name}: Mine {ore} ({location})")
+                        print(f"   • {mat_name}: {mat_qty:,.0f} units → Mine {ore} ({location})")
                         print(f"     └─ {notes}")
+                        m3_per = self._ore_m3_per_mineral(ore, mat_name)
+                        if m3_per is not None:
+                            m3_total = math.ceil(mat_qty * m3_per)
+                            print(f"     └─ Mining: ~{m3_total:,} m³ of {ore} (at 100% refine)")
             
             # PI acquisition guide
             if classified_materials['PI']:
@@ -962,13 +1043,516 @@ class ManufacturingOptimizer:
             'blueprint': blueprint,
             'materials': total_materials,
             'output_quantity': output_quantity,
-            'manufacturing_time': manufacturing.get('time', 0)
+            'manufacturing_time': manufacturing.get('time', 0),
+            'raw_materials': raw_materials,
+            'classified_materials': classified_materials,
+            'all_blueprints': all_blueprints,
+            'owned_blueprints': owned_blueprints,
+            'build_tree': self.collect_build_tree(type_id, 1),
         }
+
+def generate_html_report(optimizer: "ManufacturingOptimizer", analysis: Dict) -> Path:
+    """Generate a self-contained HTML report from analysis data and return the output path."""
+
+    item_name   = analysis["item_name"]
+    blueprint   = analysis["blueprint"]
+    materials   = analysis["materials"]          # direct materials {type_id: {name, quantity}}
+    output_qty  = analysis["output_quantity"]
+    mfg_time    = analysis["manufacturing_time"]
+    raw_mats    = analysis.get("raw_materials", {})
+    classified  = analysis.get("classified_materials", {})
+    blueprints_needed = analysis.get("all_blueprints", {})
+    owned_blueprints  = analysis.get("owned_blueprints", {})
+    profile     = optimizer.profile
+
+    mineral_ore_guide = {
+        "Tritanium":  ("Veldspar",    "High Sec",          "Most common, anywhere"),
+        "Pyerite":    ("Scordite",    "High Sec",          "Common in 0.7–1.0 systems"),
+        "Mexallon":   ("Pyroxeres",   "High Sec",          "Common in 0.5–0.9 systems"),
+        "Isogen":     ("Omber",       "Low Sec (0.4–0.1)", "Some in 0.4–0.7 high sec"),
+        "Nocxium":    ("Hemorphite",  "Low/Null Sec",      "Rare in high sec"),
+        "Zydrine":    ("Bistot",      "Null Sec (0.0)",    "Requires expedition to null"),
+        "Megacyte":   ("Arkonor",     "Null Sec (0.0)",    "Best yields in null/wormholes"),
+    }
+    pi_planet_guide = {
+        "Aqueous Liquids":   "Temperate, Oceanic",
+        "Autotrophs":        "Temperate, Gas",
+        "Base Metals":       "Barren, Lava, Ice",
+        "Carbon Compounds":  "Oceanic, Storm",
+        "Complex Organisms": "Temperate, Oceanic",
+        "Felsic Magma":      "Lava, Plasma",
+        "Heavy Metals":      "Barren, Lava",
+        "Ionic Solutions":   "Storm, Gas",
+        "Microorganisms":    "Oceanic, Water",
+        "Noble Gas":         "Gas, Storm",
+        "Noble Metals":      "Barren, Ice",
+        "Non-CS Crystals":   "Ice, Barren",
+        "Planktic Colonies": "Oceanic, Temperate",
+        "Reactive Gas":      "Gas, Storm",
+        "Suspended Plasma":  "Plasma, Lava",
+    }
+
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    # ── helpers ────────────────────────────────────────────────────────────────
+    def h(text: str) -> str:
+        """HTML-escape."""
+        return (str(text)
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;"))
+
+    def fmt(n) -> str:
+        try:
+            return f"{int(n):,}"
+        except Exception:
+            return str(n)
+
+    def time_str(seconds: int) -> str:
+        if seconds <= 0:
+            return "—"
+        h_ = seconds // 3600
+        m_ = (seconds % 3600) // 60
+        return f"{h_}h {m_}m" if h_ else f"{m_}m"
+
+    # ── Overview tab ───────────────────────────────────────────────────────────
+    bp_name = h(blueprint["blueprint_name"])
+    mfg_time_str = time_str(mfg_time)
+
+    direct_rows = ""
+    for tid, info in materials.items():
+        name = h(info["name"])
+        qty  = fmt(info["quantity"])
+        is_mfg = not optimizer.is_raw_material(tid)
+        badge = '<span class="badge badge-mfg">manufactured</span>' if is_mfg else '<span class="badge badge-raw">raw</span>'
+        direct_rows += f"<tr><td>{name}</td><td class='num'>{qty}</td><td>{badge}</td></tr>\n"
+
+    overview_tab = f"""
+    <div class="card">
+      <h2>📦 Item Overview</h2>
+      <table class="info-table">
+        <tr><th>Item</th><td>{h(item_name)}</td></tr>
+        <tr><th>Blueprint</th><td>{bp_name}</td></tr>
+        <tr><th>Output per run</th><td>{fmt(output_qty)}</td></tr>
+        <tr><th>Base build time</th><td>{mfg_time_str}</td></tr>
+        <tr><th>Pilot</th><td>{h(profile.name)}</td></tr>
+        <tr><th>Report generated</th><td>{h(now_str)}</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h2>🔩 Direct Materials (1 run)</h2>
+      <table>
+        <thead><tr><th>Material</th><th class="num">Quantity</th><th>Type</th></tr></thead>
+        <tbody>{direct_rows}</tbody>
+      </table>
+    </div>"""
+
+    # ── Blueprints tab ─────────────────────────────────────────────────────────
+    bp_rows = ""
+    for bp_type_id, bp_info in sorted(blueprints_needed.items(), key=lambda x: x[1]["name"]):
+        bp_label = h(bp_info["name"])
+        bp_kind  = "Manufacturing" if bp_info.get("has_manufacturing") else "Reaction"
+        blueprint_id = bp_info.get("blueprint_id")
+        if blueprint_id and blueprint_id in owned_blueprints:
+            copies = owned_blueprints[blueprint_id]
+            for owned in copies:
+                bp_t = "BPC" if owned.get("is_blueprint_copy") else "BPO"
+                loc  = h(owned.get("location_name", f"Location {owned.get('location_id')}"))
+                bp_rows += (f"<tr class='owned'><td>{bp_label}</td><td>{h(bp_kind)}</td>"
+                            f"<td><span class='badge badge-ok'>✓ {bp_t}</span></td><td>{loc}</td></tr>\n")
+        else:
+            bp_rows += (f"<tr class='missing'><td>{bp_label}</td><td>{h(bp_kind)}</td>"
+                        f"<td><span class='badge badge-miss'>✗ Not owned</span></td><td>—</td></tr>\n")
+
+    total_bp = len(blueprints_needed)
+    owned_count = sum(1 for bp_info in blueprints_needed.values()
+                      if bp_info.get("blueprint_id") in owned_blueprints)
+    missing_count = total_bp - owned_count
+
+    blueprints_tab = f"""
+    <div class="card">
+      <h2>📘 Blueprint Requirements</h2>
+      <div class="stat-row">
+        <div class="stat"><span class="stat-val">{total_bp}</span><span class="stat-lbl">Total needed</span></div>
+        <div class="stat ok"><span class="stat-val">{owned_count}</span><span class="stat-lbl">Owned</span></div>
+        <div class="stat miss"><span class="stat-val">{missing_count}</span><span class="stat-lbl">Missing</span></div>
+      </div>
+      <table>
+        <thead><tr><th>Blueprint</th><th>Type</th><th>Status</th><th>Location</th></tr></thead>
+        <tbody>{bp_rows if bp_rows else "<tr><td colspan='4'>Only main blueprint required</td></tr>"}</tbody>
+      </table>
+    </div>"""
+
+    # ── Raw Materials tab ──────────────────────────────────────────────────────
+    category_info = {
+        "MINERAL":      ("⛏️ Minerals",                 "#f59e0b"),
+        "PI":           ("🌍 Planetary Interaction (P0)","#10b981"),
+        "MOON":         ("🌙 Moon Materials",            "#8b5cf6"),
+        "FUEL":         ("⚡ Fuel Blocks",               "#ef4444"),
+        "ADVANCED":     ("🎁 Advanced Components",       "#3b82f6"),
+        "ICE":          ("❄️ Ice Products",              "#06b6d4"),
+        "MATERIAL":     ("📦 Generic Materials",         "#6b7280"),
+        "REACTION":     ("⚗️ Reaction Products",         "#f97316"),
+        "REACTION_INT": ("🧪 Reaction Intermediates",    "#a855f7"),
+        "OTHER":        ("❓ Other",                     "#6b7280"),
+    }
+
+    raw_sections = ""
+    for cat in ["MINERAL", "PI", "MOON", "FUEL", "ADVANCED", "REACTION", "REACTION_INT", "ICE", "MATERIAL", "OTHER"]:
+        items = classified.get(cat, [])
+        if not items:
+            continue
+        label, color = category_info[cat]
+        rows = ""
+        for mat_name, mat_qty in sorted(items, key=lambda x: x[1], reverse=True):
+            rows += f"<tr><td>{h(mat_name)}</td><td class='num'>{fmt(mat_qty)}</td></tr>\n"
+        raw_sections += f"""
+        <div class="card">
+          <h3 style="border-left:4px solid {color}; padding-left:10px">{h(label)}</h3>
+          <table>
+            <thead><tr><th>Material</th><th class="num">Quantity</th></tr></thead>
+            <tbody>{rows}</tbody>
+          </table>
+        </div>"""
+
+    raw_tab = raw_sections or "<div class='card'><p>No raw materials calculated.</p></div>"
+
+    # ── Acquisition Guide tab ──────────────────────────────────────────────────
+    acq_sections = ""
+
+    # Minerals
+    mineral_items = classified.get("MINERAL", [])
+    if mineral_items:
+        rows = ""
+        for mat_name, mat_qty in mineral_items:
+            if mat_name in mineral_ore_guide:
+                ore, location, notes = mineral_ore_guide[mat_name]
+                m3_per = optimizer._ore_m3_per_mineral(ore, mat_name)
+                m3_str = f"~{math.ceil(mat_qty * m3_per):,} m³ of {h(ore)}" if m3_per else "—"
+                rows += (f"<tr><td>{h(mat_name)}</td><td class='num'>{fmt(mat_qty)}</td>"
+                         f"<td>{h(ore)}</td><td>{h(location)}</td><td class='num'>{m3_str}</td>"
+                         f"<td class='note'>{h(notes)}</td></tr>\n")
+            else:
+                rows += (f"<tr><td>{h(mat_name)}</td><td class='num'>{fmt(mat_qty)}</td>"
+                         f"<td>—</td><td>—</td><td>—</td><td>—</td></tr>\n")
+        acq_sections += f"""
+        <div class="card">
+          <h3>⛏️ Minerals — Mine &amp; Refine</h3>
+          <p class="hint">Mine ore then refine at station (requires Reprocessing skills). Volume assumes 100% refine efficiency.</p>
+          <table>
+            <thead><tr><th>Mineral</th><th class="num">Qty needed</th><th>Best ore</th><th>Location</th><th class="num">Est. volume to mine</th><th>Notes</th></tr></thead>
+            <tbody>{rows}</tbody>
+          </table>
+        </div>"""
+
+    # PI
+    pi_items = classified.get("PI", [])
+    if pi_items:
+        rows = ""
+        for mat_name, mat_qty in pi_items:
+            planet = pi_planet_guide.get(mat_name, "Various planets")
+            rows += f"<tr><td>{h(mat_name)}</td><td class='num'>{fmt(mat_qty)}</td><td>{h(planet)}</td></tr>\n"
+        acq_sections += f"""
+        <div class="card">
+          <h3>🌍 Planetary Interaction — P0 Raw Extraction</h3>
+          <p class="hint">Set up Command Centers + Extractors. Better yields in Low/Null sec (×1.5 / ×2.0).</p>
+          <table>
+            <thead><tr><th>P0 Material</th><th class="num">Qty needed</th><th>Planet types</th></tr></thead>
+            <tbody>{rows}</tbody>
+          </table>
+        </div>"""
+
+    # Moon
+    moon_items = classified.get("MOON", [])
+    if moon_items:
+        rows = "".join(f"<tr><td>{h(n)}</td><td class='num'>{fmt(q)}</td></tr>" for n, q in moon_items)
+        acq_sections += f"""
+        <div class="card">
+          <h3>🌙 Moon Materials — Moon Mining</h3>
+          <p class="hint">Requires Athanor/Tatara in Low/Null sec. Corporation must own the structure.</p>
+          <table>
+            <thead><tr><th>Material</th><th class="num">Qty needed</th></tr></thead>
+            <tbody>{rows}</tbody>
+          </table>
+          <p class="hint">💡 Tip: Joining a null-sec alliance is often easier than setting up solo infrastructure. Alternatively buy from Jita.</p>
+        </div>"""
+
+    # Fuel / Ice / Advanced / Other — simple tables
+    for cat, label, hint in [
+        ("FUEL",     "⚡ Fuel Blocks",           "Easier to buy from market than manufacture. Requires ice products to make."),
+        ("ICE",      "❄️ Ice Products",           "Mine from ice belts (check Dotlan for nearest belt)."),
+        ("ADVANCED", "🎁 Advanced Components",    "Buy from NPC market, player market, or contracts."),
+        ("REACTION", "⚗️ Reaction Products",      "Produce in a Tatara/Sotiyo via reactions, or buy from market."),
+        ("REACTION_INT","🧪 Reaction Intermediates","Intermediate reaction products — required for composites."),
+        ("MATERIAL", "📦 Generic Materials",      "Buy from market."),
+    ]:
+        items = classified.get(cat, [])
+        if not items:
+            continue
+        rows = "".join(f"<tr><td>{h(n)}</td><td class='num'>{fmt(q)}</td></tr>" for n, q in items)
+        acq_sections += f"""
+        <div class="card">
+          <h3>{h(label)}</h3>
+          <p class="hint">{h(hint)}</p>
+          <table>
+            <thead><tr><th>Material</th><th class="num">Qty needed</th></tr></thead>
+            <tbody>{rows}</tbody>
+          </table>
+        </div>"""
+
+    acq_tab = acq_sections or "<div class='card'><p>No acquisition data available.</p></div>"
+
+    # ── Build Order / Build Tree tab ──────────────────────────────────────────
+    build_tree = analysis.get("build_tree")
+
+    def render_node(node, depth=0):
+        ntype    = node.get("node_type", "raw")
+        name_    = h(node["name"])
+        qty      = fmt(node["quantity"])
+        runs     = node.get("runs", 1)
+        children = node.get("children", [])
+        icons  = {"manufactured": "🏭", "reaction": "⚗️", "pi": "🌍", "raw": "⛏️", "cycle": "⚠️"}
+        labels = {"manufactured": "manufactured", "reaction": "reaction",
+                  "pi": "PI", "raw": "raw material", "cycle": "cycle"}
+        badge_cls = {"manufactured": "badge-mfg", "raw": "badge-raw",
+                     "reaction": "badge-react", "pi": "badge-pi", "cycle": "badge-miss"}
+        icon  = icons.get(ntype, "")
+        badge = (f'<span class="badge {badge_cls.get(ntype, "")}">'
+                 f'{icon} {h(labels.get(ntype, ntype))}</span>')
+        runs_str = (f' &nbsp;·&nbsp; <span class="tree-runs">{fmt(runs)} run(s)</span>'
+                    if ntype in ("manufactured", "reaction") and runs > 1 else "")
+        if not children:
+            return f'<div class="tree-leaf">{icon} {name_} <span class="tree-qty">× {qty}</span> {badge}</div>\n'
+        ch_html   = "".join(render_node(c, depth + 1) for c in children)
+        open_attr = " open" if depth < 2 else ""
+        return (f'<details{open_attr} class="tree-node tree-{ntype}">'
+                f'<summary>{icon} <span class="tree-name">{name_}</span>'
+                f' <span class="tree-qty">× {qty}</span>{runs_str} {badge}</summary>'
+                f'<div class="tree-children">{ch_html}</div>'
+                f'</details>\n')
+
+    def collect_build_order(node, result=None, depth=0):
+        if result is None:
+            result = {}
+        ntype = node.get("node_type", "raw")
+        if ntype in ("manufactured", "reaction", "pi"):
+            tid = node["type_id"]
+            if tid not in result or result[tid]["depth"] < depth:
+                result[tid] = {"node": node, "depth": depth}
+        for child in node.get("children", []):
+            collect_build_order(child, result, depth + 1)
+        return result
+
+    if build_tree:
+        tree_html = render_node(build_tree)
+        order_map = collect_build_order(build_tree)
+        if order_map:
+            by_depth = defaultdict(list)
+            for entry in order_map.values():
+                by_depth[entry["depth"]].append(entry["node"])
+            max_depth  = max(by_depth.keys())
+            steps_html = ""
+            step_num   = 0
+            for depth_val in sorted(by_depth.keys(), reverse=True):
+                nodes_at  = by_depth[depth_val]
+                step_num += 1
+                if depth_val == max_depth and depth_val != 0:
+                    step_label = "🔧 Step 1 — Build first (deepest sub-components)"
+                elif depth_val == 0:
+                    step_label = f"🏁 Final Step — Assemble {h(item_name)}"
+                else:
+                    step_label = f"🔧 Step {step_num}"
+                item_rows = ""
+                for n in nodes_at:
+                    ntype_ = n.get("node_type", "raw")
+                    icon_  = {"manufactured": "🏭", "reaction": "⚗️", "pi": "🌍"}.get(ntype_, "")
+                    runs_  = n.get("runs", 1)
+                    item_rows += (f'<tr><td>{icon_} {h(n["name"])}</td>'
+                                  f'<td class="num">{fmt(n["quantity"])}</td>'
+                                  f'<td class="num">{fmt(runs_)} run(s)</td></tr>')
+                steps_html += (f'<div class="step-card">'
+                               f'<div class="step-header">{step_label}</div>'
+                               f'<table><thead><tr><th>Item</th><th class="num">Quantity</th>'
+                               f'<th class="num">Runs needed</th></tr></thead>'
+                               f'<tbody>{item_rows}</tbody></table></div>')
+        else:
+            steps_html = "<p class='hint'>This item is manufactured directly from raw materials — no sub-components need to be built first.</p>"
+
+        buildtree_tab = f"""
+    <div class="card">
+      <h2>🌲 Build Tree</h2>
+      <p class="hint">Click any node to expand or collapse. All quantities are for 1 final build.</p>
+      <div class="tree-root">{tree_html}</div>
+    </div>
+    <div class="card">
+      <h2>📋 Build Sequence</h2>
+      <p class="hint">Manufacture in this order — build deeper components before the items that consume them.</p>
+      {steps_html}
+    </div>"""
+    else:
+        buildtree_tab = "<div class='card'><p>Build tree data not available.</p></div>"
+
+    # ── Assemble full HTML ─────────────────────────────────────────────────────
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EVE Build Breakdown — {h(item_name)}</title>
+<style>
+  :root {{
+    --bg: #0d1117; --surface: #161b22; --surface2: #1c2230;
+    --border: #30363d; --accent: #58a6ff; --text: #e6edf3;
+    --muted: #8b949e; --ok: #3fb950; --warn: #d29922; --err: #f85149;
+    --pill-bg: #21262d;
+  }}
+  *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  body {{
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px; line-height: 1.6;
+  }}
+  header {{
+    background: linear-gradient(135deg, #0d1b2e 0%, #1a2f4e 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 32px;
+    display: flex; align-items: center; gap: 16px;
+  }}
+  header .logo {{ font-size: 36px; }}
+  header h1 {{ font-size: 22px; font-weight: 700; color: var(--accent); }}
+  header .sub {{ color: var(--muted); font-size: 13px; margin-top: 2px; }}
+  .tab-bar {{
+    display: flex; gap: 0; border-bottom: 1px solid var(--border);
+    background: var(--surface); padding: 0 24px; overflow-x: auto;
+  }}
+  .tab-btn {{
+    padding: 12px 20px; border: none; background: none;
+    color: var(--muted); cursor: pointer; font-size: 14px; font-weight: 500;
+    border-bottom: 2px solid transparent; white-space: nowrap;
+    transition: color .2s, border-color .2s;
+  }}
+  .tab-btn:hover {{ color: var(--text); }}
+  .tab-btn.active {{ color: var(--accent); border-bottom-color: var(--accent); }}
+  .tab-content {{ display: none; padding: 24px 32px; max-width: 1200px; margin: 0 auto; }}
+  .tab-content.active {{ display: block; }}
+  .card {{
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 20px; margin-bottom: 20px;
+  }}
+  .card h2 {{ font-size: 16px; margin-bottom: 14px; color: var(--accent); }}
+  .card h3 {{ font-size: 15px; margin-bottom: 12px; }}
+  table {{ width: 100%; border-collapse: collapse; font-size: 13px; }}
+  th {{
+    text-align: left; padding: 8px 10px;
+    background: var(--surface2); color: var(--muted);
+    border-bottom: 1px solid var(--border); font-weight: 600;
+  }}
+  td {{ padding: 7px 10px; border-bottom: 1px solid var(--border); }}
+  tr:last-child td {{ border-bottom: none; }}
+  tr:hover td {{ background: var(--surface2); }}
+  td.num, th.num {{ text-align: right; font-variant-numeric: tabular-nums; }}
+  td.note {{ color: var(--muted); font-size: 12px; }}
+  .info-table th {{ width: 160px; font-weight: 600; color: var(--muted); }}
+  .badge {{
+    display: inline-block; padding: 2px 8px; border-radius: 12px;
+    font-size: 11px; font-weight: 600;
+  }}
+  .badge-raw  {{ background: #1c3a1c; color: #3fb950; }}
+  .badge-mfg  {{ background: #1a2f4e; color: #58a6ff; }}
+  .badge-ok   {{ background: #1c3a1c; color: #3fb950; }}
+  .badge-miss {{ background: #3a1c1c; color: #f85149; }}
+  .stat-row {{ display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }}
+  .stat {{
+    flex: 1; min-width: 120px; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 18px; text-align: center;
+  }}
+  .stat.ok  {{ border-color: var(--ok); }}
+  .stat.miss{{ border-color: var(--err); }}
+  .stat-val {{ display: block; font-size: 28px; font-weight: 700; color: var(--accent); }}
+  .stat.ok  .stat-val {{ color: var(--ok); }}
+  .stat.miss .stat-val {{ color: var(--err); }}
+  .stat-lbl {{ font-size: 12px; color: var(--muted); }}
+  .hint {{ color: var(--muted); font-size: 12px; margin-bottom: 10px; }}
+  tr.owned td {{ color: var(--text); }}
+  tr.missing td {{ color: var(--muted); }}
+  .tree-root {{ padding: 4px 0; }}
+  details.tree-node {{ margin: 2px 0; }}
+  details.tree-node > summary {{
+    cursor: pointer; padding: 6px 10px; border-radius: 4px;
+    display: flex; align-items: center; gap: 8px;
+    list-style: none; user-select: none; font-weight: 500;
+  }}
+  details.tree-node > summary::-webkit-details-marker {{ display: none; }}
+  details.tree-node > summary::before {{ content: '▶'; font-size: 9px; width: 12px; flex-shrink: 0; color: var(--muted); }}
+  details.tree-node[open] > summary::before {{ content: '▼'; }}
+  .tree-children {{ margin-left: 20px; border-left: 2px solid var(--border); padding-left: 12px; margin-top: 2px; }}
+  .tree-leaf {{ padding: 5px 10px; color: var(--muted); display: flex; align-items: center; gap: 8px; font-size: 13px; }}
+  .tree-qty {{ color: var(--muted); font-size: 12px; }}
+  .tree-runs {{ color: var(--muted); font-size: 12px; }}
+  .tree-name {{ font-weight: 500; }}
+  details.tree-manufactured > summary {{ background: rgba(88,166,255,.06); }}
+  details.tree-manufactured > summary:hover {{ background: rgba(88,166,255,.13); }}
+  details.tree-reaction > summary {{ background: rgba(168,85,247,.06); }}
+  details.tree-reaction > summary:hover {{ background: rgba(168,85,247,.13); }}
+  details.tree-pi > summary {{ background: rgba(16,185,129,.06); }}
+  details.tree-pi > summary:hover {{ background: rgba(16,185,129,.13); }}
+  .badge-react {{ background: #2d1f3d; color: #a855f7; }}
+  .badge-pi {{ background: #1a2d1a; color: #10b981; }}
+  .step-card {{ background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 12px; overflow: hidden; }}
+  .step-header {{ padding: 10px 14px; font-weight: 600; background: rgba(255,255,255,.03); border-bottom: 1px solid var(--border); }}
+  .step-card table {{ margin: 0; }}
+  .step-card th, .step-card td {{ padding: 8px 14px; }}
+  @media (max-width: 640px) {{
+    .tab-content {{ padding: 16px; }}
+    header {{ padding: 14px 16px; }}
+  }}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">🏗️</div>
+  <div>
+    <h1>Build Breakdown — {h(item_name)}</h1>
+    <div class="sub">EVE Online Manufacturing Report · {h(now_str)} · {h(profile.name)}</div>
+  </div>
+</header>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="showTab('overview',this)">📦 Overview</button>
+  <button class="tab-btn" onclick="showTab('blueprints',this)">📘 Blueprints</button>
+  <button class="tab-btn" onclick="showTab('rawmats',this)">⛏️ Raw Materials</button>
+  <button class="tab-btn" onclick="showTab('acquisition',this)">📚 Acquisition Guide</button>
+  <button class="tab-btn" onclick="showTab('buildorder',this)">🌲 Build Order</button>
+</div>
+
+<div id="overview"    class="tab-content active">{overview_tab}</div>
+<div id="blueprints"  class="tab-content">{blueprints_tab}</div>
+<div id="rawmats"     class="tab-content"><h2 style="color:var(--accent);margin-bottom:16px">⛏️ Total Raw Materials Needed</h2>{raw_tab}</div>
+<div id="acquisition" class="tab-content"><h2 style="color:var(--accent);margin-bottom:16px">📚 Acquisition Guide</h2>{acq_tab}</div>
+<div id="buildorder"  class="tab-content"><h2 style="color:var(--accent);margin-bottom:16px">🌲 Build Order &amp; Tree</h2>{buildtree_tab}</div>
+
+<script>
+function showTab(id, btn) {{
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}}
+</script>
+</body>
+</html>"""
+
+    out_path = Path(f"build_breakdown_{item_name.replace(' ', '_')}.html")
+    out_path.write_text(html, encoding="utf-8")
+    return out_path
+
 
 def main():
     """Main entry point"""
     parser = argparse.ArgumentParser(description='EVE Online Manufacturing Optimizer')
     parser.add_argument('--target', type=str, required=True, help='Item to manufacture (e.g., "Orca")')
+    parser.add_argument('--html', action='store_true', help='Generate an HTML report and open it in the browser')
     args = parser.parse_args()
     
     print("\n" + "=" * 80)
@@ -976,11 +1560,7 @@ def main():
     print("=" * 80)
     
     # Load character profile
-    profile = CharacterProfile()
-    if not profile.load_profile():
-        print("\n✗ No character profile found!")
-        print("Run 'python 3_refresh_user_profile.py' first to generate your profile.")
-        return
+    profile = load_profile_or_exit()
     
     print(f"\n✓ Loaded profile: {profile.name}")
     print(f"✓ Capital: {format_isk(profile.capital)} ISK")
@@ -1002,6 +1582,11 @@ def main():
         print("   1. Market price scanning (coming soon)")
         print("   2. Mining time calculation (coming soon)")
         print("   3. Cost comparison (coming soon)")
+
+        if args.html:
+            out_path = generate_html_report(optimizer, analysis)
+            print(f"\n🌐 HTML report saved: {out_path.resolve()}")
+            webbrowser.open(out_path.resolve().as_uri())
     
 if __name__ == "__main__":
     main()

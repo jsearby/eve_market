@@ -5,8 +5,12 @@ Generates a detailed report about your trading capabilities and actual costs
 
 import json
 import os
+import sys
 from datetime import datetime
+from pathlib import Path
 from typing import Dict, List, Tuple
+
+from tools.config import PROFILE_FILE
 
 
 class CharacterProfile:
@@ -307,9 +311,10 @@ class CharacterProfile:
         """Check if salvaging is trained"""
         return self.salvaging > 0
     
-    def save_profile(self, filename: str = os.path.join("cache", "user", "character_profile.json")):
+    def save_profile(self, filename=None):
         """Save profile to JSON file"""
-        os.makedirs(os.path.dirname(filename), exist_ok=True)
+        path = Path(filename) if filename else PROFILE_FILE
+        path.parent.mkdir(parents=True, exist_ok=True)
         # Get all skill attributes dynamically
         skills = {}
         for attr in dir(self):
@@ -332,16 +337,17 @@ class CharacterProfile:
                 'in_npc_corp': self.in_npc_corp,
             }
         }
-        with open(filename, 'w') as f:
+        with open(path, 'w') as f:
             json.dump(data, f, indent=2)
-        print(f"\n✓ Profile saved to {filename}")
+        print(f"\n✓ Profile saved to {path}")
     
-    def load_profile(self, filename: str = os.path.join("cache", "user", "character_profile.json")) -> bool:
+    def load_profile(self, filename=None) -> bool:
         """Load profile from JSON file"""
-        if not os.path.exists(filename):
+        path = Path(filename) if filename else PROFILE_FILE
+        if not path.exists():
             return False
-        
-        with open(filename, 'r') as f:
+
+        with open(path, 'r') as f:
             data = json.load(f)
         
         self.name = data.get('name', '')
@@ -363,6 +369,16 @@ class CharacterProfile:
         self.in_npc_corp = info.get('in_npc_corp', True)
         
         return True
+
+
+def load_profile_or_exit() -> "CharacterProfile":
+    """Load the saved character profile or exit with a helpful message."""
+    profile = CharacterProfile()
+    if not profile.load_profile():
+        print("\n✗ No character profile found!")
+        print("Run 'python 3_refresh_user_profile.py' first to generate your profile.")
+        sys.exit(1)
+    return profile
 
 
 def format_isk(amount: float) -> str:

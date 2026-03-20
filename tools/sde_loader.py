@@ -11,7 +11,7 @@ from pathlib import Path
 from tools.config import SDE_DIR
 
 
-def _yaml_loader():
+def get_yaml_loader():
     """Return the fastest available YAML loader."""
     return yaml.CSafeLoader if hasattr(yaml, 'CSafeLoader') else yaml.SafeLoader
 
@@ -57,7 +57,7 @@ def load_cached_yaml(yaml_path: Path, cache_name: str, display_name: str) -> dic
 
     print(f"   Parsing {display_name} (first time may take 30-90 seconds)...")
     with open(yaml_path, 'r', encoding='utf-8') as f:
-        data = yaml.load(f, Loader=_yaml_loader())
+        data = yaml.load(f, Loader=get_yaml_loader())
 
     SDE_DIR.mkdir(parents=True, exist_ok=True)
     with open(cache_path, 'wb') as f:

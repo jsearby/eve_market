@@ -27,10 +27,11 @@ import time
 import yaml
 from datetime import datetime, timedelta
 from typing import List, Dict, Tuple, Set
-from tools.character_model import CharacterProfile, format_isk
-from tools.esi_auth import ESIAuth, load_client_credentials
+from tools.character_model import CharacterProfile, format_isk, load_profile_or_exit
+from tools.esi_auth import ESIAuth, load_client_credentials, load_esi_credentials
 from tools.config import SDE_DIR, ESI_DIR, MKT_DIR, GRAPH_FILE, SDE_STATIONS_FILE, ESI_TOKENS_FILE, ESI_BASE
-from tools.sde_loader import load_cached_yaml
+from tools.sde_loader import load_cached_yaml, get_yaml_loader
+from tools.esi_market import fetch_region_orders
 import os
 from collections import defaultdict, deque
 
@@ -75,7 +76,7 @@ class TradingRouteFinder:
         # Load NPC stations from SDE (5,154 stations, no API calls needed)
         if SDE_STATIONS_FILE.exists():
             try:
-                yaml_loader = yaml.CSafeLoader if hasattr(yaml, 'CSafeLoader') else yaml.SafeLoader
+                yaml_loader = get_yaml_loader()
                 with open(SDE_STATIONS_FILE, 'r', encoding='utf-8') as f:
                     sde_stations = yaml.load(f, Loader=yaml_loader)
                 for s in sde_stations:
@@ -120,7 +121,7 @@ class TradingRouteFinder:
         sde_ids = set()
         if SDE_STATIONS_FILE.exists():
             try:
-                yaml_loader = yaml.CSafeLoader if hasattr(yaml, 'CSafeLoader') else yaml.SafeLoader
+                yaml_loader = get_yaml_loader()
                 with open(SDE_STATIONS_FILE, 'r', encoding='utf-8') as f:
                     for s in yaml.load(f, Loader=yaml_loader):
                         sde_ids.add(str(s['stationID']))
@@ -362,65 +363,12 @@ class TradingRouteFinder:
     
     def get_all_market_orders_in_region(self, region_id: int) -> List[Dict]:
         """Get ALL market orders in a region (paginated, cached permanently)
-        
+
         ESI Best Practice: Bulk download with pagination + caching
         This is the most efficient way - one call per page instead of per item
         Cache never expires - delete manually when you want fresh data
         """
-        cache_file = MKT_DIR / f"region_{region_id}.json"
-        
-        # Check if cache exists (use it forever until manually deleted)
-        if cache_file.exists():
-            try:
-                with open(cache_file, 'r') as f:
-                    cached_data = json.load(f)
-                return cached_data  # Return cached data
-            except:
-                pass  # If cache is corrupted, fetch fresh data
-        
-        # Cache miss or expired - fetch from API
-        all_orders = []
-        page = 1
-        
-        while True:
-            try:
-                response = self.session.get(
-                    f"{ESI_BASE}/markets/{region_id}/orders/",
-                    params={'datasource': 'tranquility', 'page': page},
-                    timeout=15
-                )
-                self.api_calls += 1  # Track API usage
-                response.raise_for_status()
-                orders = response.json()
-                
-                if not orders or len(orders) == 0:
-                    break
-                
-                all_orders.extend(orders)
-                page += 1
-                
-                # Check if there are more pages
-                if 'x-pages' in response.headers:
-                    total_pages = int(response.headers['x-pages'])
-                    if page > total_pages:
-                        break
-                else:
-                    break
-                
-                # Respectful delay between pages (ESI limit is 150/sec, we use ~10/sec)
-                time.sleep(0.1)
-                    
-            except:
-                break
-        
-        # Save to cache
-        try:
-            with open(cache_file, 'w') as f:
-                json.dump(all_orders, f)
-        except:
-            pass  # If cache write fails, just continue
-        
-        return all_orders
+        return fetch_region_orders(region_id, session=self.session)
     
     def get_item_volume(self, type_id: int) -> float:
         """Get item volume in m³ from SDE data"""
@@ -883,11 +831,7 @@ def main():
     print("=" * 80)
     
     # Load character profile
-    profile = CharacterProfile()
-    if not profile.load_profile():
-        print("\n✗ No character profile found!")
-        print("Run 'python 3_refresh_user_profile.py' first to generate your profile.")
-        return
+    profile = load_profile_or_exit()
     
     print(f"\n✓ Loaded profile: {profile.name}")
     print(f"✓ Capital: {format_isk(profile.capital)} ISK")
@@ -915,12 +859,8 @@ def main():
         print(f"✓ Invalid input, using profile tax: {current_tax_pct:.2f}%")
     
     # Setup ESI authentication
-    client_id = os.getenv('EVE_CLIENT_ID')
-    client_secret = os.getenv('EVE_CLIENT_SECRET')
-    
-    if not client_id or not client_secret:
-        client_id, client_secret = load_client_credentials()
-        
+    client_id, client_secret = load_esi_credentials()
+
     if not client_id or not client_secret:
         print("\n✗ No ESI credentials found!")
         print("Run 'python 3_refresh_user_profile.py' to set up credentials.")
